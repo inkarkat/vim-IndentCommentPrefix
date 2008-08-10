@@ -26,8 +26,8 @@
 vmap x X
 
 function! s:IndentKeepCommentPrefix()
-    let l:lineLength = len(getline(line('.')))
-    let l:matches = matchlist( getline(line('.')), '\(^\S\+\)\(\s\)' )
+    let l:line = line('.')
+    let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s\)' )
     let l:prefix = get(l:matches, 1, '')
     let l:indent = get(l:matches, 2, '')
 
@@ -41,17 +41,17 @@ function! s:IndentKeepCommentPrefix()
     endif
 
     "****D echomsg l:indent == ' ' ? 'spaces' : 'tab'
-    let l:position = getpos('.')
+    let l:virtCol = virtcol('.')
 
     execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (&l:et ? repeat(' ', len(l:prefix)) : '') . '/'
     normal! >>
     execute 's/^' . (&l:et ? repeat(' ', len(l:prefix)) : '') . '/' . escape(l:prefix, '/\&~') . '/'
 
     
-    " Adjust cursor column; since we cannot set the cursor based on virtual
-    " columns, use the difference in line length before and after. 
-    let l:position[2] += (len(getline(line('.'))) - l:lineLength)
-    call setpos('.', l:position)
+    " Adjust cursor column based on the _virtual_ column. (Important since we're
+    " dealing with <Tab> characters here!) 
+    call cursor(l:line, 1)
+    call search('\%>' . (l:virtCol + &l:sw - 1) . 'v', 'c', l:line)
 endfunction
 
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix()<CR>
