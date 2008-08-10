@@ -40,9 +40,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     let l:prefix = get(l:matches, 1, '')
     let l:indent = get(l:matches, 2, '')
 
-    let l:isGoodIndent = (l:indent == ' ' && &l:et) || (l:indent == "\t" && ! &l:et)
-
-    if empty(l:prefix) || ! l:isGoodIndent || &l:comments !~# l:prefix  
+    if empty(l:prefix) || &l:comments !~# l:prefix  
 	" No prefix in this line or the prefix is not registered as a comment. 
 	call s:DoIndent( a:isDedent, a:isInsertMode )
 	return
@@ -51,16 +49,30 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     "****D echomsg l:indent == ' ' ? 'spaces' : 'tab'
     let l:virtCol = virtcol('.')
 
-    execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (&l:et ? repeat(' ', len(l:prefix)) : '') . '/'
+    " If the actual indent is a <Tab>, remove the prefix. If it is <Space>,
+    " replace prefix with spaces so that the overall indentation remains fixed. 
+    " Note: We have to decide based on the actual indent, because with the
+    " softtabstop setting, there may be spaces though the overall indenting is
+    " done with <Tab>. 
+    execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:indent == ' ' ? repeat(' ', len(l:prefix)) : '') . '/'
+
     call s:DoIndent( a:isDedent, 0 )
+
+    " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
+    " replace spaces with prefix so that the overall indentation remains fixed. 
+    " Note: We have to re-evaluate because the softtabstop setting may have
+    " changed <Tab> into spaces and vice versa. 
+    let l:newIndent = matchstr( getline(l:line), '^\s' )
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting. 
-    execute 's/^' . (&l:et ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/'
+    execute 's/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/'
 
     
     " Adjust cursor column based on the _virtual_ column. (Important since we're
     " dealing with <Tab> characters here!) 
-    let l:newVirtCol = l:virtCol + (a:isDedent ? -1 : 1) * &l:sw
+    " Note: If the former indent was less than one shiftwidth, it is ignored, so
+    " that the cursor is positioned on the first tabstop. 
+    let l:newVirtCol = (l:virtCol <= &l:sw ? 1 : l:virtCol) + (a:isDedent ? -1 : 1) * &l:sw
     call cursor(l:line, 1)
     if l:newVirtCol > 1
 	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', l:line)
@@ -69,8 +81,8 @@ endfunction
 
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix(0,1)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefix(1,1)<CR>
-nnoremap <silent> >> <C-o>:call <SID>IndentKeepCommentPrefix(0,0)<CR>
-nnoremap <silent> << <C-o>:call <SID>IndentKeepCommentPrefix(1,0)<CR>
+"nnoremap <silent> >> <C-o>:call <SID>IndentKeepCommentPrefix(0,0)<CR>
+"nnoremap <silent> << <C-o>:call <SID>IndentKeepCommentPrefix(1,0)<CR>
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
 
