@@ -28,10 +28,8 @@ vmap x X
 function! s:DoIndent( isDedent, isInsertMode )
     if a:isInsertMode
 	call feedkeys( (a:isDedent ? "\<C-d>" : "\<C-t>"), 'n' )
-    elseif a:isDedent
-	normal! <<
     else
-	normal! >>
+	execute 'normal!' (a:isDedent ? '<<' : '>>')
     endif
 endfunction
 function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
@@ -81,8 +79,17 @@ endfunction
 
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix(0,1)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefix(1,1)<CR>
-"nnoremap <silent> >> <C-o>:call <SID>IndentKeepCommentPrefix(0,0)<CR>
-"nnoremap <silent> << <C-o>:call <SID>IndentKeepCommentPrefix(1,0)<CR>
+
+function! s:IndentKeepCommentPrefixRange( isDedent ) range
+    "execute a:firstline . ',' a:lastline . 'g//call <SID>IndentKeepCommentPrefix(' . a:isDedent . ',0)'
+    for l in range(a:firstline, a:lastline)
+	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ',0)'
+    endfor
+
+    execute a:firstline
+endfunction
+nnoremap <silent> >> :call <SID>IndentKeepCommentPrefixRange(0)<CR>
+nnoremap <silent> << :call <SID>IndentKeepCommentPrefixRange(1)<CR>
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
 
