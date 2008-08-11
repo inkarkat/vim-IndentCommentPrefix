@@ -19,8 +19,17 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	12-Aug-2008	Do not clobber search history with :s command. 
+"				If a blank is required after the comment prefix,
+"				make sure it still exists when dedenting. 
 "	001	11-Aug-2008	file creation
 
+" Avoid installing twice or when in unsupported VIM version. 
+if exists('g:loaded_IndentCommentPrefix') || (v:version < 700)
+    finish
+endif
+let g:loaded_IndentCommentPrefix = 1
+ 
 function! s:DoIndent( isDedent, isInsertMode )
     if a:isInsertMode
 	call feedkeys( (a:isDedent ? "\<C-d>" : "\<C-t>"), 'n' )
@@ -49,6 +58,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>. 
     execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:indent == ' ' ? repeat(' ', len(l:prefix)) : '') . '/'
+    call histdel('/', -1)
 
     call s:DoIndent( a:isDedent, 0 )
 
@@ -60,6 +70,14 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting. 
     execute 's/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/'
+    call histdel('/', -1)
+
+    " If a blank is required after the comment prefix, make sure it still exists
+    " when dedenting. 
+    if &l:comments =~# 'b:' . l:prefix && a:isDedent
+	execute 's/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e'
+	call histdel('/', -1)
+    endif
 
     
     " Adjust cursor column based on the _virtual_ column. (Important since we're
