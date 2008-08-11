@@ -1,9 +1,11 @@
-" TODO: summary
+" IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting. 
 "
 " DESCRIPTION:
 " USAGE:
 " INSTALLATION:
 " DEPENDENCIES:
+"   - repeat.vim autoload script (optional)
+"
 " CONFIGURATION:
 " INTEGRATION:
 " LIMITATIONS:
@@ -17,13 +19,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"	001	00-Jan-2008	file creation
-"	lalala
-"	    tab tab tab
-"	tab tab tab
-"           spc spc spc
-"       spc spc spc
-vmap x X
+"	001	11-Aug-2008	file creation
 
 function! s:DoIndent( isDedent, isInsertMode )
     if a:isInsertMode
@@ -81,15 +77,23 @@ inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix(0,1)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefix(1,1)<CR>
 
 function! s:IndentKeepCommentPrefixRange( isDedent ) range
-    "execute a:firstline . ',' a:lastline . 'g//call <SID>IndentKeepCommentPrefix(' . a:isDedent . ',0)'
     for l in range(a:firstline, a:lastline)
 	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ',0)'
     endfor
 
+    " Go back to first line, like the default >> commands. 
     execute a:firstline
+
+    " Integration into repeat.vim. 
+    silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent)
 endfunction
-nnoremap <silent> >> :call <SID>IndentKeepCommentPrefixRange(0)<CR>
-nnoremap <silent> << :call <SID>IndentKeepCommentPrefixRange(1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1)<CR>
+if ! hasmapto('<Plug>IndentCommentPrefix0', 'n')
+    nmap <silent> >> <Plug>IndentCommentPrefix0
+endif
+if ! hasmapto('<Plug>IndentCommentPrefix1', 'n')
+    nmap <silent> << <Plug>IndentCommentPrefix1
+endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
-
