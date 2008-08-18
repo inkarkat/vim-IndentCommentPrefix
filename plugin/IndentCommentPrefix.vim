@@ -1,10 +1,40 @@
 " IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting. 
 "
 " DESCRIPTION:
+"   Indent commands like >>, << and <C-T>/<C-D> in insert mode indent the entire
+"   line. For some kinds of comments, like the big boilerplate at the file
+"   header etc., the comment prefix (e.g. # for Perl scripts) should remain at
+"   the first column, though. 
+"   This plugin modifies some indent commands so that the comment prefix remains
+"   in the first column, and the indenting takes place between the comment
+"   prefix and the comment text. For that, it uses the comment configuration
+"   provided by the buffer's 'comment' option, which is set by most filetype
+"   plugins. 
+"
 " USAGE:
+"   On a line like this:
+"   # My comment. 
+"   The >> command now keeps the # prefix in column 1, and just indents the
+"   comment text:
+"   #       My comment. 
+"   This only works if there is at least one whitespace character after the
+"   prefix (so that comments like ###### do not become #       ######). 
+"   Progressive de-indenting will remove all whitespace between prefix and
+"   comment text, or leave a single space in between if the 'comments' setting
+"   requires a blank after the comment prefix. 
+"
+"   An optional [count] can be supplied to the >> and << commands, as before. 
+"   With the optional repeat.vim script, the command can also be repeated via '.'. 
+"   
+"   The same behavior is available in insert mode via <C-T>/<C-D> mappings. 
+"
+"   The visual mode > and < commands are not modified, so you can get access to
+"   the original indent behavior by first selecting the line(s) in visual mode
+"   before indenting. 
+"
 " INSTALLATION:
 " DEPENDENCIES:
-"   - repeat.vim autoload script (optional)
+"   - vimscript #2136 repeat.vim autoload script (optional)
 "
 " CONFIGURATION:
 " INTEGRATION:
