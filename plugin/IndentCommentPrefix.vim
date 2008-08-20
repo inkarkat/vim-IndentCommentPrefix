@@ -49,6 +49,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	19-Aug-2008	BF: Indenting/detenting at the first shiftwidth
+"				caused cursor to move to column 1; now adjusting
+"				for the net reduction caused by the prefix. 
 "	002	12-Aug-2008	Do not clobber search history with :s command. 
 "				If a blank is required after the comment prefix,
 "				make sure it still exists when dedenting. 
@@ -68,10 +71,26 @@ function! s:DoIndent( isDedent, isInsertMode )
     endif
 endfunction
 function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
+"*******************************************************************************
+"* PURPOSE:
+"   Enhanced indent / dedent replacement for >>, <<, i_CTRL-D, i_CTRL-T
+"   commands. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   "Normal" prefix characters (i.e. they have screen width of 1 and are encoded
+"   by one byte); as we're using len(l:prefix) to calculate screen width. 
+"* EFFECTS / POSTCONDITIONS:
+"   Modifies current line. 
+"* INPUTS:
+"   a:isDedent	    Flag whether indenting or dedenting. 
+"   a:isInsertMode  Flag whether normal mode or insert mode replacement. 
+"* RETURN VALUES: 
+"   none
+"*******************************************************************************
     let l:line = line('.')
-    let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s\)' )
+    let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s*\)' )
     let l:prefix = get(l:matches, 1, '')
     let l:indent = get(l:matches, 2, '')
+    let l:isSpaceIndent = (l:indent =~# '^ ')
 
     if empty(l:prefix) || &l:comments !~# l:prefix  
 	" No prefix in this line or the prefix is not registered as a comment. 
@@ -79,7 +98,9 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 	return
     endif
 
-    "****D echomsg l:indent == ' ' ? 'spaces' : 'tab'
+
+
+"****D echomsg l:isSpaceIndent ? 'spaces' : 'tab'
     let l:virtCol = virtcol('.')
 
     " If the actual indent is a <Tab>, remove the prefix. If it is <Space>,
@@ -87,7 +108,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     " Note: We have to decide based on the actual indent, because with the
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>. 
-    execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:indent == ' ' ? repeat(' ', len(l:prefix)) : '') . '/'
+    execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/'
     call histdel('/', -1)
 
     call s:DoIndent( a:isDedent, 0 )
@@ -108,13 +129,25 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 	execute 's/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e'
 	call histdel('/', -1)
     endif
-
     
+
     " Adjust cursor column based on the _virtual_ column. (Important since we're
     " dealing with <Tab> characters here!) 
-    " Note: If the former indent was less than one shiftwidth, it is ignored, so
-    " that the cursor is positioned on the first tabstop. 
-    let l:newVirtCol = (l:virtCol <= &l:sw ? 1 : l:virtCol) + (a:isDedent ? -1 : 1) * &l:sw
+    let l:newVirtCol = l:virtCol
+    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < &l:sw
+	" If the former indent was less than one shiftwidth and indenting was
+	" done via spaces, this reduces the net change of cursor position. 
+	let l:newVirtCol -= len(l:prefix . l:indent)
+    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:sw
+	" Also, on the last possible dedent, the prefix (and one <Space> if blank
+	" required) will reduce the net change of cursor position. 
+	let l:newVirtCol += len(l:prefix) + (&l:comments =~# 'b:' . l:prefix ? 1 : 0)
+    endif
+    " Calculate new cursor position based on indent/dedent of shiftwidth,
+    " considering the adjustments made before. 
+    let l:newVirtCol += (a:isDedent ? -1 : 1) * &l:sw
+
+"****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
     call cursor(l:line, 1)
     if l:newVirtCol > 1
 	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', l:line)
