@@ -78,6 +78,10 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 "* ASSUMPTIONS / PRECONDITIONS:
 "   "Normal" prefix characters (i.e. they have screen width of 1 and are encoded
 "   by one byte); as we're using len(l:prefix) to calculate screen width. 
+"   Folding should be turned off (:setlocal nofoldenable); otherwise, the
+"   modifications of the line (i.e. removing and re-adding the comment prefix)
+"   may result in creation / removal of folds, and suddenly the function
+"   operates on multiple lines!
 "* EFFECTS / POSTCONDITIONS:
 "   Modifies current line. 
 "* INPUTS:
@@ -158,15 +162,28 @@ inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix(0,1)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefix(1,1)<CR>
 
 function! s:IndentKeepCommentPrefixRange( isDedent ) range
-    for l in range(a:firstline, a:lastline)
+    " Determine the net last line (different if last line is folded) and
+    " temporarily turn off folding while indenting the lines. 
+    let l:netLastLine = (foldclosedend(a:lastline) == -1 ? a:lastline : foldclosedend(a:lastline))
+    let l:save_foldenable = &l:foldenable
+    setlocal nofoldenable
+
+    for l in range(a:firstline, l:netLastLine)
 	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ',0)'
     endfor
 
     " Go back to first line, like the default >> commands. 
     execute a:firstline
 
+    let &l:foldenable = l:save_foldenable
+
     " Integration into repeat.vim. 
     silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent)
+
+    let l:lineNum = l:netLastLine - a:firstline + 1
+    if l:lineNum > 1
+	echo l:lineNum 'lines' (a:isDedent ? '<' : '>') . 'ed 1 time'
+    endif
 endfunction
 nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0)<CR>
 nnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1)<CR>
