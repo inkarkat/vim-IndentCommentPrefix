@@ -1,0 +1,31 @@
+" TODO: summary
+"
+" DESCRIPTION:
+" USAGE:
+" INSTALLATION:
+" DEPENDENCIES:
+" CONFIGURATION:
+" INTEGRATION:
+" LIMITATIONS:
+" ASSUMPTIONS:
+" KNOWN PROBLEMS:
+" TODO:
+"
+" Copyright: (C) 2008 by Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"
+" Maintainer:	Ingo Karkat <ingo@karkat.de>
+"
+" REVISION	DATE		REMARKS 
+"	001	00-Jan-2008	file creation
+"	lalala
+"	    tab tab tab
+"	tab tab tab
+"           spc spc spc
+"       spc spc spc
+vmap x X
+# footed
+#	bill
+
+setlocal comments+=b:# 
+" vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
