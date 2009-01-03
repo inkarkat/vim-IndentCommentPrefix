@@ -173,18 +173,32 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 endfunction
 
 function! s:IndentKeepCommentPrefixInsertMode( isDedent )
+    " The temporary disabling of folding may result in a change of the viewed
+    " lines, which would be irritating for a command that only modified the
+    " current line. Thus, save and restore the view, but take into account that
+    " the indenting changes the cursor column. 
+    let l:save_winview = winsaveview()
+
     " Temporarily turn off folding while indenting the line. 
     let l:save_foldenable = &l:foldenable
     setlocal nofoldenable
 
     call s:IndentKeepCommentPrefix(a:isDedent,1)
+    let l:save_cursor = getpos('.') " Save new cursor position after indent. 
 
     let &l:foldenable = l:save_foldenable
+    call winrestview(l:save_winview)
+    " Restore new cursor position after indent; the saved view has reset the position to before indent. 
+    call setpos('.', l:save_cursor)
 endfunction
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
 
 function! s:IndentKeepCommentPrefixRange( isDedent ) range
+    " The temporary disabling of folding may result in a change of the viewed
+    " lines, which would be irritating for a command that only modified the
+    " current line. Thus, save and restore the view. 
+    let l:save_winview = winsaveview()
     " Determine the net last line (different if last line is folded) and
     " temporarily turn off folding while indenting the lines. 
     let l:netLastLine = (foldclosedend(a:lastline) == -1 ? a:lastline : foldclosedend(a:lastline))
@@ -195,10 +209,12 @@ function! s:IndentKeepCommentPrefixRange( isDedent ) range
 	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ',0)'
     endfor
 
-    " Go back to first line, like the default >> commands. 
-    execute a:firstline
-
     let &l:foldenable = l:save_foldenable
+    call winrestview(l:save_winview)
+
+    " Go back to first line, like the default >> indent commands. 
+    execute a:firstline
+    normal! w
 
     " Integration into repeat.vim. 
     silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent)
