@@ -213,8 +213,18 @@ function! s:IndentKeepCommentPrefixRange( isDedent ) range
     call winrestview(l:save_winview)
 
     " Go back to first line, like the default >> indent commands. 
+    " But put the cursor on the first non-blank character after the comment
+    " prefix, not on first overall non-blank character, as the default >> indent
+    " commands would do. This makes more sense, since we're essentially ignoring
+    " the comment prefix during indenting. 
     execute a:firstline
-    normal! w
+    let l:matches = matchlist( getline(a:firstline), '\(^\S\+\)\s*' )
+    let l:prefix = get(l:matches, 1, '')
+    if ! empty(l:prefix) && &l:comments =~# l:prefix  
+	" Yes, the first line was a special comment prefix indent, not a normal
+	" one. 
+	call search('^\S\+\s*\%(\S\|$\)', 'ce', a:firstline)
+    endif
 
     " Integration into repeat.vim. 
     silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent)
