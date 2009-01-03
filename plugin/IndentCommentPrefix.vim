@@ -49,6 +49,20 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	21-Aug-2008	BF: Didn't consider that removing the comment
+"				prefix could cause changes in folding (e.g. in
+"				vimscript if the line ends with "if"), which
+"				then affects all indent operations, which now
+"				work on the closed fold instead of the current
+"				line. Now temporarily disabling folding. 
+"				BF: The looping over the passed range in
+"				s:IndentKeepCommentPrefixRange() didn't consider
+"				closed folds, so those (except for a last-line
+"				fold) would be processed multiple times. Now
+"				that folding is temporarily disabling, need to
+"				account for the net end of the range. 
+"				Added echo message when operating on more than
+"				one line, like the original >> commands. 
 "	003	19-Aug-2008	BF: Indenting/detenting at the first shiftwidth
 "				caused cursor to move to column 1; now adjusting
 "				for the net reduction caused by the prefix. 
@@ -62,7 +76,7 @@ if exists('g:loaded_IndentCommentPrefix') || (v:version < 700)
     finish
 endif
 let g:loaded_IndentCommentPrefix = 1
- 
+
 function! s:DoIndent( isDedent, isInsertMode )
     if a:isInsertMode
 	call feedkeys( (a:isDedent ? "\<C-d>" : "\<C-t>"), 'n' )
@@ -158,8 +172,17 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     endif
 endfunction
 
-inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefix(0,1)<CR>
-inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefix(1,1)<CR>
+function! s:IndentKeepCommentPrefixInsertMode( isDedent )
+    " Temporarily turn off folding while indenting the line. 
+    let l:save_foldenable = &l:foldenable
+    setlocal nofoldenable
+
+    call s:IndentKeepCommentPrefix(a:isDedent,1)
+
+    let &l:foldenable = l:save_foldenable
+endfunction
+inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
+inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
 
 function! s:IndentKeepCommentPrefixRange( isDedent ) range
     " Determine the net last line (different if last line is folded) and
