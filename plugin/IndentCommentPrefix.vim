@@ -49,6 +49,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	04-Jan-2009	BF: Fixed changes of vertical window position by
+"				saving and restoring window view. 
+"				ENH: The >> and << (range) commands now position
+"				the cursor on the first non-blank character
+"				after the comment prefix; this makes more sense. 
+"				Now avoiding superfluous cursor positioning when
+"				indenting ranges. (Side effect from the changes
+"				due to restore of window position.) 
 "	004	21-Aug-2008	BF: Didn't consider that removing the comment
 "				prefix could cause changes in folding (e.g. in
 "				vimscript if the line ends with "if"), which
@@ -102,7 +110,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 "   a:isDedent	    Flag whether indenting or dedenting. 
 "   a:isInsertMode  Flag whether normal mode or insert mode replacement. 
 "* RETURN VALUES: 
-"   none
+"   New virtual cursor column, taking into account the indent operation. 
 "*******************************************************************************
     let l:line = line('.')
     let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s*\)' )
@@ -113,7 +121,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     if empty(l:prefix) || &l:comments !~# l:prefix  
 	" No prefix in this line or the prefix is not registered as a comment. 
 	call s:DoIndent( a:isDedent, a:isInsertMode )
-	return
+	return virtcol('.')
     endif
 
 
@@ -166,30 +174,44 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     let l:newVirtCol += (a:isDedent ? -1 : 1) * &l:sw
 
 "****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
-    call cursor(l:line, 1)
-    if l:newVirtCol > 1
-	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', l:line)
-    endif
+    return l:newVirtCol
+
+    " Note: The cursor column isn't updated here anymore, because the window
+    " view had to be saved and restored by the caller of this function, anyway. 
+    " (Due to the temporary disabling of folding.) As the window position
+    " restore also restores the old cursor position, the setting here would be
+    " overwritten, anyway.
+    " Plus, the s:IndentKeepCommentPrefixRange() functionality sets the cursor
+    " position in a different way, anyway, and only for the first line in the
+    " range, so the setting here would be superfluous, too. 
+    "call cursor(l:line, 1)
+    "if l:newVirtCol > 1
+    "	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', l:line)
+    "endif
 endfunction
 
 function! s:IndentKeepCommentPrefixInsertMode( isDedent )
     " The temporary disabling of folding may result in a change of the viewed
     " lines, which would be irritating for a command that only modified the
-    " current line. Thus, save and restore the view, but take into account that
-    " the indenting changes the cursor column. 
+    " current line. Thus, save and restore the view, but afterwards take into
+    " account that the indenting changes the cursor column. 
     let l:save_winview = winsaveview()
 
     " Temporarily turn off folding while indenting the line. 
     let l:save_foldenable = &l:foldenable
     setlocal nofoldenable
 
-    call s:IndentKeepCommentPrefix(a:isDedent,1)
-    let l:save_cursor = getpos('.') " Save new cursor position after indent. 
+    let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent,1)
 
     let &l:foldenable = l:save_foldenable
     call winrestview(l:save_winview)
-    " Restore new cursor position after indent; the saved view has reset the position to before indent. 
-    call setpos('.', l:save_cursor)
+
+    " Set new cursor position after indenting; the saved view has reset the
+    " position to before indent. 
+    call cursor('.', 1)
+    if l:newVirtCol > 1
+	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', line('.'))
+    endif
 endfunction
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
