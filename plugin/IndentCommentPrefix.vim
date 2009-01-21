@@ -5,11 +5,11 @@
 "   line. For some kinds of comments, like the big boilerplate at the file
 "   header etc., the comment prefix (e.g. # for Perl scripts) should remain at
 "   the first column, though. 
-"   This plugin modifies some indent commands so that the comment prefix remains
-"   in the first column, and the indenting takes place between the comment
-"   prefix and the comment text. For that, it uses the comment configuration
-"   provided by the buffer's 'comment' option, which is set by most filetype
-"   plugins. 
+"   This plugin modifies these indent commands so that the comment prefix
+"   remains in the first column, and the indenting takes place between the
+"   comment prefix and the comment text. For that, it uses the comment
+"   configuration provided by the buffer's 'comment' option, which is set by
+"   most filetype plugins. 
 "
 " USAGE:
 "   On a line like this:
@@ -23,12 +23,16 @@
 "   comment text, or leave a single space in between if the 'comments' setting
 "   requires a blank after the comment prefix. 
 "
-"   An optional [count] can be supplied to the >> and << commands, as before. 
-"   With the optional repeat.vim script, the command can also be repeated via '.'. 
-"   
-"   The same behavior is available in insert mode via <C-T>/<C-D> mappings. 
+"   An optional [count] of lines can be supplied to the >> and << commands, as
+"   before.
+"   In visual mode, the optional [count] specifies how many 'shiftwidth's should
+"   be indented; the > and < commands operate on all highlighted lines. 
 "
-"   The visual mode > and < commands are not modified, so you can get access to
+"   With the optional repeat.vim script, the commands can also be repeated via '.'. 
+"   
+"   The same behavior is available in insert mode via the <C-T>/<C-D> mappings. 
+"
+"   TODO: The visual mode > and < commands are not modified, so you can get access to
 "   the original indent behavior by first selecting the line(s) in visual mode
 "   before indenting. 
 "
@@ -47,6 +51,12 @@
 "     somewhere behind a <Tab> character. The changing virtual width of these
 "     <Tab> characters isn't considered when calculating the new virtual cursor
 "     column. 
+"   - If a visual mode '.' repeat command is defined to repeat the last change
+"     on all highlighted lines, and the previous indent operation used a [count]
+"     greater than 1, the highlighted lines will be indented multiple times and
+"     lines after the current visual selection will be erroneously indented,
+"     too. (So it's a big mess up, don't do this.) This is because the previous
+"     [count] will now be used repeatedly to select multiple lines. 
 "
 " TODO:
 "
@@ -56,6 +66,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	22-Jan-2009	Added visual mode mappings. 
+"				Enhanced implementation to deal with the
+"				optional [count] 'shiftwidth's that can be
+"				specified in visual mode. 
 "	005	04-Jan-2009	BF: Fixed changes of vertical window position by
 "				saving and restoring window view. 
 "				ENH: The >> and << (range) commands now position
@@ -92,14 +106,14 @@ if exists('g:loaded_IndentCommentPrefix') || (v:version < 700)
 endif
 let g:loaded_IndentCommentPrefix = 1
 
-function! s:DoIndent( isDedent, isInsertMode )
+function! s:DoIndent( isDedent, isInsertMode, count )
     if a:isInsertMode
-	call feedkeys( (a:isDedent ? "\<C-d>" : "\<C-t>"), 'n' )
+	call feedkeys( repeat((a:isDedent ? "\<C-d>" : "\<C-t>"), a:count), 'n' )
     else
-	execute 'normal!' (a:isDedent ? '<<' : '>>')
+	execute 'normal!' repeat((a:isDedent ? '<<' : '>>'), a:count)
     endif
 endfunction
-function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
+function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
 "*******************************************************************************
 "* PURPOSE:
 "   Enhanced indent / dedent replacement for >>, <<, i_CTRL-D, i_CTRL-T
@@ -116,8 +130,15 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 "* INPUTS:
 "   a:isDedent	    Flag whether indenting or dedenting. 
 "   a:isInsertMode  Flag whether normal mode or insert mode replacement. 
+"   a:count	    Number of 'shiftwidth' that should be indented (i.e. number
+"		    of repetitions of the indent command). 
 "* RETURN VALUES: 
-"   New virtual cursor column, taking into account the indent operation. 
+"   New virtual cursor column, taking into account a single (a:count == 1)
+"   indent operation. 
+"   Multiple repetitions are not supported here, because the virtual cursor
+"   column is only consumed by the insert mode operation, which is always a
+"   single indent. The (possibly multi-indent) visual mode operation discards
+"   this return value, anyway. 
 "*******************************************************************************
     let l:line = line('.')
     let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s*\)' )
@@ -127,7 +148,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 
     if empty(l:prefix) || &l:comments !~# l:prefix  
 	" No prefix in this line or the prefix is not registered as a comment. 
-	call s:DoIndent( a:isDedent, a:isInsertMode )
+	call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
 	" The built-in indent commands automatically adjust the cursor column. 
 	return virtcol('.')
     endif
@@ -145,7 +166,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/'
     call histdel('/', -1)
 
-    call s:DoIndent( a:isDedent, 0 )
+    call s:DoIndent( a:isDedent, 0, a:count )
 
     " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
     " replace spaces with prefix so that the overall indentation remains fixed. 
@@ -167,6 +188,8 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 
     " Adjust cursor column based on the _virtual_ column. (Important since we're
     " dealing with <Tab> characters here!) 
+    " Note: This calculation ignores a:count, see note in function
+    " documentation. 
     let l:newVirtCol = l:virtCol
     if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < &l:sw
 	" If the former indent was less than one shiftwidth and indenting was
@@ -209,7 +232,7 @@ function! s:IndentKeepCommentPrefixInsertMode( isDedent )
     let l:save_foldenable = &l:foldenable
     setlocal nofoldenable
 
-    let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent, 1)
+    let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent, 1, 1)
 
     let &l:foldenable = l:save_foldenable
     call winrestview(l:save_winview)
@@ -224,7 +247,7 @@ endfunction
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
 
-function! s:IndentKeepCommentPrefixRange( isDedent ) range
+function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
     " The temporary disabling of folding below may result in a change of the
     " viewed lines, which would be irritating for a command that only modified
     " the current line. Thus, save and restore the view. 
@@ -237,7 +260,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent ) range
     setlocal nofoldenable
 
     for l in range(a:firstline, l:netLastLine)
-	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ', 0)'
+	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ', 0'. ', ' . a:count . ')'
     endfor
 
     let &l:foldenable = l:save_foldenable
@@ -258,20 +281,33 @@ function! s:IndentKeepCommentPrefixRange( isDedent ) range
     endif
 
     " Integration into repeat.vim. 
-    silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent)
+    let l:netIndentedLines = l:netLastLine - a:firstline + 1
+    " Passing the net number of indented lines is necessary to correctly repeat
+    " (in normal mode) indenting of a visual selection. Otherwise, only the
+    " current line would be indented because v:count was 1 during the visual
+    " indent operation. 
+    silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent, l:netIndentedLines)
 
     let l:lineNum = l:netLastLine - a:firstline + 1
     if l:lineNum > 1
 	echo l:lineNum 'lines' (a:isDedent ? '<' : '>') . 'ed 1 time'
     endif
 endfunction
-nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0)<CR>
-nnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0,1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0,v:count1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1,1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1,v:count1)<CR>
 if ! hasmapto('<Plug>IndentCommentPrefix0', 'n')
     nmap <silent> >> <Plug>IndentCommentPrefix0
 endif
+if ! hasmapto('<Plug>IndentCommentPrefix0', 'v')
+    vmap <silent> > <Plug>IndentCommentPrefix0
+endif
 if ! hasmapto('<Plug>IndentCommentPrefix1', 'n')
     nmap <silent> << <Plug>IndentCommentPrefix1
+endif
+if ! hasmapto('<Plug>IndentCommentPrefix1', 'v')
+    vmap <silent> < <Plug>IndentCommentPrefix1
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
