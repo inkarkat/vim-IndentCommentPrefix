@@ -41,9 +41,16 @@
 " LIMITATIONS:
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
+"   - When indenting in insert mode via <C-T>/<C-D>, the cursor position may be
+"     off if there are <Tab> characters in the indented text itself (not just
+"     between the prefix and the indented text), and the cursor is positioned
+"     somewhere behind a <Tab> character. The changing virtual width of these
+"     <Tab> characters isn't considered when calculating the new virtual cursor
+"     column. 
+"
 " TODO:
 "
-" Copyright: (C) 2008 by Ingo Karkat
+" Copyright: (C) 2008-2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -121,6 +128,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     if empty(l:prefix) || &l:comments !~# l:prefix  
 	" No prefix in this line or the prefix is not registered as a comment. 
 	call s:DoIndent( a:isDedent, a:isInsertMode )
+	" The built-in indent commands automatically adjust the cursor column. 
 	return virtcol('.')
     endif
 
@@ -183,7 +191,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
     " overwritten, anyway.
     " Plus, the s:IndentKeepCommentPrefixRange() functionality sets the cursor
     " position in a different way, anyway, and only for the first line in the
-    " range, so the setting here would be superfluous, too. 
+    " range, so the cursor movement here would be superfluous, too. 
     "call cursor(l:line, 1)
     "if l:newVirtCol > 1
     "	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', l:line)
@@ -191,17 +199,17 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode )
 endfunction
 
 function! s:IndentKeepCommentPrefixInsertMode( isDedent )
-    " The temporary disabling of folding may result in a change of the viewed
-    " lines, which would be irritating for a command that only modified the
-    " current line. Thus, save and restore the view, but afterwards take into
-    " account that the indenting changes the cursor column. 
+    " The temporary disabling of folding below may result in a change of the
+    " viewed lines, which would be irritating for a command that only modified
+    " the current line. Thus, save and restore the view, but afterwards take
+    " into account that the indenting changes the cursor column. 
     let l:save_winview = winsaveview()
 
     " Temporarily turn off folding while indenting the line. 
     let l:save_foldenable = &l:foldenable
     setlocal nofoldenable
 
-    let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent,1)
+    let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent, 1)
 
     let &l:foldenable = l:save_foldenable
     call winrestview(l:save_winview)
@@ -217,10 +225,11 @@ inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
 
 function! s:IndentKeepCommentPrefixRange( isDedent ) range
-    " The temporary disabling of folding may result in a change of the viewed
-    " lines, which would be irritating for a command that only modified the
-    " current line. Thus, save and restore the view. 
+    " The temporary disabling of folding below may result in a change of the
+    " viewed lines, which would be irritating for a command that only modified
+    " the current line. Thus, save and restore the view. 
     let l:save_winview = winsaveview()
+
     " Determine the net last line (different if last line is folded) and
     " temporarily turn off folding while indenting the lines. 
     let l:netLastLine = (foldclosedend(a:lastline) == -1 ? a:lastline : foldclosedend(a:lastline))
@@ -228,7 +237,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent ) range
     setlocal nofoldenable
 
     for l in range(a:firstline, l:netLastLine)
-	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ',0)'
+	execute l . 'call s:IndentKeepCommentPrefix(' . a:isDedent . ', 0)'
     endfor
 
     let &l:foldenable = l:save_foldenable
