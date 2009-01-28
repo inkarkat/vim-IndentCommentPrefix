@@ -128,6 +128,12 @@ if ! exists('g:IndentCommentPrefix_alternativeOriginalCommands')
 endif
 
 "------------------------------------------------------------------------------
+function! s:IsComment( prefix )
+    return &l:comments !~# a:prefix  
+endfunction
+function! s:IsBlankRequiredAfterPrefix( prefix )
+    return &l:comments =~# 'b:' . a:prefix
+endfunction
 function! s:DoIndent( isDedent, isInsertMode, count )
     if a:isInsertMode
 	call feedkeys( repeat((a:isDedent ? "\<C-d>" : "\<C-t>"), a:count), 'n' )
@@ -168,7 +174,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
     let l:indent = get(l:matches, 2, '')
     let l:isSpaceIndent = (l:indent =~# '^ ')
 
-    if empty(l:prefix) || &l:comments !~# l:prefix  
+    if empty(l:prefix) || ! s:IsComment(l:prefix)
 	" No prefix in this line or the prefix is not registered as a comment. 
 	call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
 	" The built-in indent commands automatically adjust the cursor column. 
@@ -202,7 +208,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting. 
-    if &l:comments =~# 'b:' . l:prefix && a:isDedent
+    if s:IsBlankRequiredAfterPrefix(l:prefix) && a:isDedent
 	execute 's/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e'
 	call histdel('/', -1)
     endif
@@ -220,7 +226,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
     elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:sw
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position. 
-	let l:newVirtCol += len(l:prefix) + (&l:comments =~# 'b:' . l:prefix ? 1 : 0)
+	let l:newVirtCol += len(l:prefix) + (s:IsBlankRequiredAfterPrefix(l:prefix) ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before. 
