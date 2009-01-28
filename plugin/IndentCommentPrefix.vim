@@ -32,15 +32,26 @@
 "   
 "   The same behavior is available in insert mode via the <C-T>/<C-D> mappings. 
 "
-"   TODO: The visual mode > and < commands are not modified, so you can get access to
-"   the original indent behavior by first selecting the line(s) in visual mode
-"   before indenting. 
+"   In case you want to indent lines including the comment prefix, the original
+"   indent behavior is mapped to 'g>>' in normal mode and 'g>' in visual mode.
+"   (There's no need for the corresponding g<< dedent mappings, just stop
+"   dedenting when the comment prefix reaches column 1.)
+"   Alternatively, you could also use the >{motion} command, as the > and <
+"   operators aren't modified by this script. 
 "
 " INSTALLATION:
+"   Put the script into your user or system VIM plugin directory (e.g.
+"   ~/.vim/plugin). 
+"
 " DEPENDENCIES:
 "   - vimscript #2136 repeat.vim autoload script (optional)
 "
 " CONFIGURATION:
+"   If you don't want the alternative g>> mappings for the original indent
+"   commands, set the following variable _before_ sourcing this script (e.g. in
+"   your vimrc file (see :help vimrc)). 
+"	let g:IndentCommentPrefix_alternativeOriginalCommands = 0
+"
 " INTEGRATION:
 " LIMITATIONS:
 " ASSUMPTIONS:
@@ -48,9 +59,13 @@
 "   - When indenting in insert mode via <C-T>/<C-D>, the cursor position may be
 "     off if there are <Tab> characters in the indented text itself (not just
 "     between the prefix and the indented text), and the cursor is positioned
-"     somewhere behind a <Tab> character. The changing virtual width of these
-"     <Tab> characters isn't considered when calculating the new virtual cursor
-"     column. 
+"     somewhere behind such a <Tab> character. The changing virtual width of
+"     these <Tab> characters isn't considered when calculating the new virtual
+"     cursor column. 
+"   - With ':set list' and if ':set listchars' does not include a 'tab:xy' item,
+"     tabs show up as ^I and do not occupy the full width (up to 'tabstop'
+"     characters). This shortened representation throws off the cursor position
+"     when indenting in insert mode via <C-T>/<C-D>. 
 "   - If a visual mode '.' repeat command is defined to repeat the last change
 "     on all highlighted lines, and the previous indent operation used a [count]
 "     greater than 1, the highlighted lines will be indented multiple times and
@@ -59,6 +74,7 @@
 "     [count] will now be used repeatedly to select multiple lines. 
 "
 " TODO:
+"   - Does it make sense to also modify the >{motion} operators? 
 "
 " Copyright: (C) 2008-2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -106,6 +122,12 @@ if exists('g:loaded_IndentCommentPrefix') || (v:version < 700)
 endif
 let g:loaded_IndentCommentPrefix = 1
 
+"- configuration --------------------------------------------------------------
+if ! exists('g:IndentCommentPrefix_alternativeOriginalCommands')
+    let g:IndentCommentPrefix_alternativeOriginalCommands = 1
+endif
+
+"------------------------------------------------------------------------------
 function! s:DoIndent( isDedent, isInsertMode, count )
     if a:isInsertMode
 	call feedkeys( repeat((a:isDedent ? "\<C-d>" : "\<C-t>"), a:count), 'n' )
@@ -308,6 +330,11 @@ if ! hasmapto('<Plug>IndentCommentPrefix1', 'n')
 endif
 if ! hasmapto('<Plug>IndentCommentPrefix1', 'v')
     vmap <silent> < <Plug>IndentCommentPrefix1
+endif
+
+if g:IndentCommentPrefix_alternativeOriginalCommands
+    nnoremap g>> >>
+    vnoremap g> >
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
