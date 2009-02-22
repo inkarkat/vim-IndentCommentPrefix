@@ -44,6 +44,7 @@
 "   ~/.vim/plugin). 
 "
 " DEPENDENCIES:
+"   - Requires VIM 7.0 or higher. 
 "   - vimscript #2136 repeat.vim autoload script (optional)
 "
 " CONFIGURATION:
@@ -82,6 +83,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.00.007	29-Jan-2009	BF: Test whether prefix is a comment was too
+"				primitive and failed to distinguish between ':'
+"				(label) and '::' (comment) in dosbatch filetype.
+"				Now using exact regexp factored out into a
+"				function, also for the blank-required check. 
 "	006	22-Jan-2009	Added visual mode mappings. 
 "				Enhanced implementation to deal with the
 "				optional [count] 'shiftwidth's that can be
@@ -128,11 +134,14 @@ if ! exists('g:IndentCommentPrefix_alternativeOriginalCommands')
 endif
 
 "------------------------------------------------------------------------------
+function! s:IsMatchInComments( flag, prefix )
+    return &l:comments =~# '\%(^\|,\)[^:]*\V' . escape(a:flag, '\') . '\m[^:]*:' . a:prefix . '\%(,\|$\)'
+endfunction
 function! s:IsComment( prefix )
-    return &l:comments !~# a:prefix  
+    return s:IsMatchInComments('', a:prefix)
 endfunction
 function! s:IsBlankRequiredAfterPrefix( prefix )
-    return &l:comments =~# 'b:' . a:prefix
+    return s:IsMatchInComments('b', a:prefix)
 endfunction
 function! s:DoIndent( isDedent, isInsertMode, count )
     if a:isInsertMode
