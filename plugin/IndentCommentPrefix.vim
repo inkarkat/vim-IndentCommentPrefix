@@ -89,6 +89,9 @@
 "				was caused by a mixed up argument escaping in
 "				s:IsMatchInComments() and one missed escaping
 "				elsewhere. 
+"				BF: Info message (given when indenting multiple
+"				lines) always printed "1 time" even when a
+"				[count] was specified in visual mode. 
 "   1.00.007	29-Jan-2009	BF: Test whether prefix is a comment was too
 "				primitive and failed to distinguish between ':'
 "				(label) and '::' (comment) in dosbatch filetype.
@@ -340,7 +343,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
 
     let l:lineNum = l:netLastLine - a:firstline + 1
     if l:lineNum > 1
-	echo l:lineNum 'lines' (a:isDedent ? '<' : '>') . 'ed 1 time'
+	echo printf('%d lines %sed %d time%s', l:lineNum, (a:isDedent ? '<' : '>'), a:count, (a:count > 1 ? 's' : ''))
     endif
 endfunction
 nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0,1)<CR>
