@@ -217,7 +217,7 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>. 
     execute 's/^\C\V' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/'
-    call histdel('/', -1)
+    call histdel('search', -1)
 
     call s:DoIndent( a:isDedent, 0, a:count )
 
@@ -229,13 +229,13 @@ function! s:IndentKeepCommentPrefix( isDedent, isInsertMode, count )
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting. 
     execute 's/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/'
-    call histdel('/', -1)
+    call histdel('search', -1)
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting. 
     if s:IsBlankRequiredAfterPrefix(l:prefix) && a:isDedent
 	execute 's/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e'
-	call histdel('/', -1)
+	call histdel('search', -1)
     endif
     
 
