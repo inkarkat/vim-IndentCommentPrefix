@@ -77,12 +77,15 @@
 " TODO:
 "   - Does it make sense to also modify the >{motion} operators? 
 "
-" Copyright: (C) 2008-2009 by Ingo Karkat
+" Copyright: (C) 2008-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.03.011	29-Mar-2011	BUG: Only report changes if more than 'report'
+"				lines where indented; I got the meaning of
+"				'report' wrong the first time. 
 "   1.02.010	06-Oct-2009	Do not define mappings for select mode;
 "				printable characters should start insert mode. 
 "   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
@@ -356,9 +359,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
     silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent, l:netIndentedLines)
 
     let l:lineNum = l:netLastLine - a:firstline + 1
-    " Vim reports the change if more than one line is indented (unless 'report'
-    " is 0). 
-    if l:lineNum > (&report == 0 ? 0 : 1)
+    if l:lineNum > &report
 	echo printf('%d line%s %sed %d time%s', l:lineNum, (l:lineNum == 1 ? '' : 's'), (a:isDedent ? '<' : '>'), a:count, (a:count == 1 ? '' : 's'))
     endif
 endfunction
