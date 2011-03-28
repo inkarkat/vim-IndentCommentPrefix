@@ -86,6 +86,12 @@
 "   1.03.011	29-Mar-2011	BUG: Only report changes if more than 'report'
 "				lines where indented; I got the meaning of
 "				'report' wrong the first time. 
+"				BUG: Could not use 999>> to indent all remaining
+"				lines. Fix by explicitly passing v:count1 to
+"				s:IndentKeepCommentPrefixRange() from normal
+"				mode mappings and calculating the last line with
+"				a cap, instead of using the implicit
+"				:call-range. 
 "   1.02.010	06-Oct-2009	Do not define mappings for select mode;
 "				printable characters should start insert mode. 
 "   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
@@ -317,15 +323,21 @@ endfunction
 inoremap <silent> <C-t> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call <SID>IndentKeepCommentPrefixInsertMode(1)<CR>
 
-function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
+function! s:IndentKeepCommentPrefixRange( isDedent, count, lineNum ) range
     " The temporary disabling of folding below may result in a change of the
     " viewed lines, which would be irritating for a command that only modified
     " the current line. Thus, save and restore the view. 
     let l:save_view = winsaveview()
 
-    " Determine the net last line (different if last line is folded) and
-    " temporarily turn off folding while indenting the lines. 
-    let l:netLastLine = (foldclosedend(a:lastline) == -1 ? a:lastline : foldclosedend(a:lastline))
+    " From a normal mode mapping, the count in a:lineNum may address more lines
+    " than actually existing (e.g. when using 999>> to indent all remaining
+    " lines); the calculated last line needs to be capped to avoid errors. 
+    let l:lastLine = (a:lastline == a:firstline ? min([a:firstline + a:lineNum - 1, line('$')]) : a:lastline)
+
+    " Determine the net last line (different if last line is folded). 
+    let l:netLastLine = (foldclosedend(l:lastLine) == -1 ? l:lastLine : foldclosedend(l:lastLine))
+
+    " Temporarily turn off folding while indenting the lines. 
     let l:save_foldenable = &l:foldenable
     setlocal nofoldenable
 
@@ -363,10 +375,10 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
 	echo printf('%d line%s %sed %d time%s', l:lineNum, (l:lineNum == 1 ? '' : 's'), (a:isDedent ? '<' : '>'), a:count, (a:count == 1 ? '' : 's'))
     endif
 endfunction
-nnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0,1)<CR>
-vnoremap <silent> <Plug>IndentCommentPrefix0 :call <SID>IndentKeepCommentPrefixRange(0,v:count1)<CR>
-nnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1,1)<CR>
-vnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixRange(1,v:count1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call <SID>IndentKeepCommentPrefixRange(0,1,v:count1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix0      :call <SID>IndentKeepCommentPrefixRange(0,v:count1,1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix1 :<C-u>call <SID>IndentKeepCommentPrefixRange(1,1,v:count1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix1      :call <SID>IndentKeepCommentPrefixRange(1,v:count1,1)<CR>
 if ! hasmapto('<Plug>IndentCommentPrefix0', 'n')
     nmap <silent> >> <Plug>IndentCommentPrefix0
 endif
