@@ -92,6 +92,10 @@
 "				mode mappings and calculating the last line with
 "				a cap, instead of using the implicit
 "				:call-range. 
+"				BUG: Normal-mode mapping didn't necessarily put
+"				the cursor on the first non-blank character
+"				after the comment prefix if 'nostartofline' is
+"				set. 
 "   1.02.010	06-Oct-2009	Do not define mappings for select mode;
 "				printable characters should start insert mode. 
 "   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
@@ -349,11 +353,12 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count, lineNum ) range
     call winrestview(l:save_view)
 
     " Go back to first line, like the default >> indent commands. 
+    execute a:firstline . 'G^'
+    " Go back to first line, ...
     " But put the cursor on the first non-blank character after the comment
     " prefix, not on first overall non-blank character, as the default >> indent
     " commands would do. This makes more sense, since we're essentially ignoring
     " the comment prefix during indenting. 
-    execute a:firstline
     let l:matches = matchlist( getline(a:firstline), '\(^\S\+\)\s*' )
     let l:prefix = get(l:matches, 1, '')
     if ! empty(l:prefix) && &l:comments =~# s:Literal(l:prefix)
