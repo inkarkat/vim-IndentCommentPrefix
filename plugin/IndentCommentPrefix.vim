@@ -83,6 +83,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.02.010	06-Oct-2009	Do not define mappings for select mode;
+"				printable characters should start insert mode. 
 "   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
 "				the :substitute and << / >> commands created
 "				additional messages, causing a hit-enter prompt. 
@@ -291,7 +293,7 @@ function! s:IndentKeepCommentPrefixInsertMode( isDedent )
     " viewed lines, which would be irritating for a command that only modified
     " the current line. Thus, save and restore the view, but afterwards take
     " into account that the indenting changes the cursor column. 
-    let l:save_winview = winsaveview()
+    let l:save_view = winsaveview()
 
     " Temporarily turn off folding while indenting the line. 
     let l:save_foldenable = &l:foldenable
@@ -300,7 +302,7 @@ function! s:IndentKeepCommentPrefixInsertMode( isDedent )
     let l:newVirtCol = s:IndentKeepCommentPrefix(a:isDedent, 1, 1)
 
     let &l:foldenable = l:save_foldenable
-    call winrestview(l:save_winview)
+    call winrestview(l:save_view)
 
     " Set new cursor position after indenting; the saved view has reset the
     " position to before indent. 
@@ -316,7 +318,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
     " The temporary disabling of folding below may result in a change of the
     " viewed lines, which would be irritating for a command that only modified
     " the current line. Thus, save and restore the view. 
-    let l:save_winview = winsaveview()
+    let l:save_view = winsaveview()
 
     " Determine the net last line (different if last line is folded) and
     " temporarily turn off folding while indenting the lines. 
@@ -329,7 +331,7 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count ) range
     endfor
 
     let &l:foldenable = l:save_foldenable
-    call winrestview(l:save_winview)
+    call winrestview(l:save_view)
 
     " Go back to first line, like the default >> indent commands. 
     " But put the cursor on the first non-blank character after the comment
@@ -367,19 +369,19 @@ vnoremap <silent> <Plug>IndentCommentPrefix1 :call <SID>IndentKeepCommentPrefixR
 if ! hasmapto('<Plug>IndentCommentPrefix0', 'n')
     nmap <silent> >> <Plug>IndentCommentPrefix0
 endif
-if ! hasmapto('<Plug>IndentCommentPrefix0', 'v')
-    vmap <silent> > <Plug>IndentCommentPrefix0
+if ! hasmapto('<Plug>IndentCommentPrefix0', 'x')
+    xmap <silent> > <Plug>IndentCommentPrefix0
 endif
 if ! hasmapto('<Plug>IndentCommentPrefix1', 'n')
     nmap <silent> << <Plug>IndentCommentPrefix1
 endif
-if ! hasmapto('<Plug>IndentCommentPrefix1', 'v')
-    vmap <silent> < <Plug>IndentCommentPrefix1
+if ! hasmapto('<Plug>IndentCommentPrefix1', 'x')
+    xmap <silent> < <Plug>IndentCommentPrefix1
 endif
 
 if g:IndentCommentPrefix_alternativeOriginalCommands
     nnoremap g>> >>
-    vnoremap g> >
+    xnoremap g> >
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
