@@ -83,7 +83,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"   1.03.011	29-Mar-2011	BUG: Only report changes if more than 'report'
+"   1.10.011	29-Mar-2011	BUG: Only report changes if more than 'report'
 "				lines where indented; I got the meaning of
 "				'report' wrong the first time. 
 "				BUG: Could not use 999>> to indent all remaining
@@ -96,6 +96,8 @@
 "				the cursor on the first non-blank character
 "				after the comment prefix if 'nostartofline' is
 "				set. 
+"				ENH: In normal and visual mode, set the change
+"				marks '[ and ]' similar to what Vim does. 
 "   1.02.010	06-Oct-2009	Do not define mappings for select mode;
 "				printable characters should start insert mode. 
 "   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
@@ -353,7 +355,9 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count, lineNum ) range
     call winrestview(l:save_view)
 
     " Go back to first line, like the default >> indent commands. 
-    execute a:firstline . 'G^'
+    execute 'normal!' a:firstline . 'G^'
+    let l:startChangePosition = getpos('.')
+
     " Go back to first line, ...
     " But put the cursor on the first non-blank character after the comment
     " prefix, not on first overall non-blank character, as the default >> indent
@@ -374,6 +378,12 @@ function! s:IndentKeepCommentPrefixRange( isDedent, count, lineNum ) range
     " current line would be indented because v:count was 1 during the visual
     " indent operation. 
     silent! call repeat#set("\<Plug>IndentCommentPrefix" . a:isDedent, l:netIndentedLines)
+
+    " Set the change marks similar to what Vim does. (I don't grasp the logic
+    " for '[, but using the first non-blank character seems reasonable to me.) 
+    " This must somehow be done after the call to repeat.vim. 
+    call setpos("'[", l:startChangePosition)
+    call setpos("']", [0, l:netLastLine, strlen(getline(l:netLastLine)), 0])
 
     let l:lineNum = l:netLastLine - a:firstline + 1
     if l:lineNum > &report
