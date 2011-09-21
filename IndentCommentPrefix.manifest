@@ -1,0 +1,3 @@
+autoload/IndentCommentPrefix.vim
+plugin/IndentCommentPrefix.vim
+doc/IndentCommentPrefix.txt
