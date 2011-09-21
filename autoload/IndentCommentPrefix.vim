@@ -9,6 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.11.013	20-Sep-2011	Minor code simplification. 
 "   1.10.012	30-Mar-2011	Split off separate documentation and autoload
 "				script. 
 "   1.10.011	29-Mar-2011	BUG: Only report changes if more than 'report'
@@ -142,10 +143,9 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "   this return value, anyway. 
 "*******************************************************************************
     let l:line = line('.')
-    let l:matches = matchlist( getline(l:line), '\(^\S\+\)\(\s*\)' )
+    let l:matches = matchlist(getline(l:line), '^\(\S\+\)\(\s*\)')
     let l:prefix = get(l:matches, 1, '')
     let l:indent = get(l:matches, 2, '')
-    let l:isSpaceIndent = (l:indent =~# '^ ')
 
     if empty(l:prefix) || ! s:IsComment(l:prefix)
 	" No prefix in this line or the prefix is not registered as a comment. 
@@ -155,8 +155,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     endif
 
 
-
-"****D echomsg l:isSpaceIndent ? 'spaces' : 'tab'
+    let l:isSpaceIndent = (l:indent =~# '^ ')
     let l:virtCol = virtcol('.')
 
     " If the actual indent is a <Tab>, remove the prefix. If it is <Space>,
@@ -277,8 +276,7 @@ function! IndentCommentPrefix#Range( isDedent, count, lineNum ) range
     " prefix, not on first overall non-blank character, as the default >> indent
     " commands would do. This makes more sense, since we're essentially ignoring
     " the comment prefix during indenting. 
-    let l:matches = matchlist( getline(a:firstline), '\(^\S\+\)\s*' )
-    let l:prefix = get(l:matches, 1, '')
+    let l:prefix = get(matchlist(getline(a:firstline), '^\(\S\+\)\s*'), 1, '')
     if ! empty(l:prefix) && &l:comments =~# s:Literal(l:prefix)
 	" Yes, the first line was a special comment prefix indent, not a normal
 	" one. 
