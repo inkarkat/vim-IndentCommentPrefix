@@ -1,6 +1,7 @@
 " IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting. 
 "
 " DEPENDENCIES:
+"   - ingocomments.vim autoload script. 
 "   - vimscript #2136 repeat.vim autoload script (optional). 
 "
 " Copyright: (C) 2008-2011 by Ingo Karkat
@@ -9,6 +10,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.014	22-Sep-2011	FIX: Now handling three-piece comments
+"				correctly. The start may set a positive indent
+"				offset for the middle and end comment prefixes
+"				that must be considered. 
+"				Factor out processing of 'comments' to
+"				ingocomments.vim autoload script, so that the
+"				functionality can be reused in
+"				IndentTab/CommentPrefix.vim. 
+"				FIX: Suppress 'ignorecase' in s:Literal(). 
 "   1.11.013	20-Sep-2011	Minor code simplification. 
 "   1.10.012	30-Mar-2011	Split off separate documentation and autoload
 "				script. 
@@ -85,17 +95,7 @@
 
 function! s:Literal( string )
 " Helper: Make a:string a literal search expression. 
-    return '\V' . escape(a:string, '\') . '\m'
-endfunction
-
-function! s:IsMatchInComments( flag, prefix )
-    return &l:comments =~# '\%(^\|,\)[^:]*' . a:flag . '[^:]*:' . s:Literal(a:prefix) . '\%(,\|$\)'
-endfunction
-function! s:IsComment( prefix )
-    return s:IsMatchInComments('', a:prefix)
-endfunction
-function! s:IsBlankRequiredAfterPrefix( prefix )
-    return s:IsMatchInComments('b', a:prefix)
+    return '\V\C' . escape(a:string, '\') . '\m'
 endfunction
 
 "------------------------------------------------------------------------------
@@ -143,16 +143,25 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "   this return value, anyway. 
 "*******************************************************************************
     let l:line = line('.')
-    let l:matches = matchlist(getline(l:line), '^\(\S\+\)\(\s*\)')
+    " The comment prefix may contain indent if it's the middle or end part of a
+    " three-piece comment. 
+    let l:matches = matchlist(getline(l:line), '^\(\s*\S\+\)\(\s*\)')
     let l:prefix = get(l:matches, 1, '')
     let l:indent = get(l:matches, 2, '')
 
-    if empty(l:prefix) || ! s:IsComment(l:prefix)
-	" No prefix in this line or the prefix is not registered as a comment. 
+    if empty(l:prefix)
+	" No prefix in this line. 
 	call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
-	" The built-in indent commands automatically adjust the cursor column. 
-	return virtcol('.')
+	return virtcol('.') " The built-in indent commands automatically adjust the cursor column. 
     endif
+
+    let l:commentPrefixType = ingocomments#GetCommentPrefixType(l:prefix)
+    if empty(l:commentPrefixType)
+	" This is not a comment prefix. 
+	call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
+	return virtcol('.') " The built-in indent commands automatically adjust the cursor column. 
+    endif
+    let l:isBlankRequiredAfterPrefix = l:commentPrefixType[1]
 
 
     let l:isSpaceIndent = (l:indent =~# '^ ')
@@ -163,7 +172,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: We have to decide based on the actual indent, because with the
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>. 
-    call s:SubstituteHere('/^\C\V' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
+    call s:SubstituteHere('/^\V\C' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
 
     call s:DoIndent( a:isDedent, 0, a:count )
 
@@ -178,7 +187,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting. 
-    if s:IsBlankRequiredAfterPrefix(l:prefix) && a:isDedent
+    if l:isBlankRequiredAfterPrefix && a:isDedent
 	call s:SubstituteHere('/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e')
     endif
     
@@ -195,7 +204,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:sw
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position. 
-	let l:newVirtCol += len(l:prefix) + (s:IsBlankRequiredAfterPrefix(l:prefix) ? 1 : 0)
+	let l:newVirtCol += len(l:prefix) + (l:isBlankRequiredAfterPrefix ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before. 
