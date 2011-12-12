@@ -119,6 +119,12 @@ IDEAS						   *IndentCommentPrefix-ideas*
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
+1.20	22-Sep-2011
+- FIX: Now handling three-piece comments correctly. The start may set a
+  positive indent offset for the middle and end comment prefixes that must be
+  considered. 
+- FIX: Suppress 'ignorecase' in s:Literal(). 
+
 1.10	30-Mar-2011
 - Split off separate documentation and autoload script. Now publishing as
   Vimball. 
