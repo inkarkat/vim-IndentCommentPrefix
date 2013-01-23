@@ -90,9 +90,10 @@ variable: >
     let g:IndentCommentPrefix_Blacklist = ['#', '>']
 <
 	   *b:IndentCommentPrefix_Whitelist* *g:IndentCommentPrefix_Whitelist*
-Alternatively, if you want to modify the indenting behavior only for certain
-prefixes, add each prefix to the following (buffer-local or global) List
-variable. These prefixes do not need to be contained in 'comments' then. > >
+If you want to modify the indenting behavior for certain prefixes not just in
+column 1, but with any existing indent, add each prefix to the following
+(buffer-local or global) List variable. These prefixes do not need to be
+contained in 'comments' then. >
     let g:IndentCommentPrefix_Whitelist = ['REMARK:']
 <
 
