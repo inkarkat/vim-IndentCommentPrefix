@@ -10,6 +10,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.30.003	13-Dec-2012	Handle readonly and nomodifiable buffers by
+"				printing just the warning / error, without
+"				the multi-line function error.
 "   1.30.002	12-Dec-2012	ENH: Add global and buffer-local whitelists /
 "				blacklists to explicitly include / exclude
 "				certain comment prefixes.
@@ -42,10 +45,10 @@ endif
 inoremap <silent> <C-t> <C-o>:call IndentCommentPrefix#InsertMode(0)<CR>
 inoremap <silent> <C-d> <C-o>:call IndentCommentPrefix#InsertMode(1)<CR>
 
-nnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call IndentCommentPrefix#Range(0,1,v:count1)<CR>
-vnoremap <silent> <Plug>IndentCommentPrefix0      :call IndentCommentPrefix#Range(0,v:count1,1)<CR>
-nnoremap <silent> <Plug>IndentCommentPrefix1 :<C-u>call IndentCommentPrefix#Range(1,1,v:count1)<CR>
-vnoremap <silent> <Plug>IndentCommentPrefix1      :call IndentCommentPrefix#Range(1,v:count1,1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>call IndentCommentPrefix#Range(0,1,v:count1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>'<,'>call IndentCommentPrefix#Range(0,v:count1,1)<CR>
+nnoremap <silent> <Plug>IndentCommentPrefix1 :<C-u>call setline('.', getline('.'))<Bar>call IndentCommentPrefix#Range(1,1,v:count1)<CR>
+vnoremap <silent> <Plug>IndentCommentPrefix1 :<C-u>call setline('.', getline('.'))<Bar>'<,'>call IndentCommentPrefix#Range(1,v:count1,1)<CR>
 if ! hasmapto('<Plug>IndentCommentPrefix0', 'n')
     nmap <silent> >> <Plug>IndentCommentPrefix0
 endif
