@@ -1,4 +1,3 @@
-autoload/ingocomments.vim
 autoload/IndentCommentPrefix.vim
 plugin/IndentCommentPrefix.vim
 doc/IndentCommentPrefix.txt
