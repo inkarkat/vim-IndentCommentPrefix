@@ -1,0 +1,70 @@
+" TODO: summary
+"
+" DESCRIPTION:
+" USAGE:
+" INSTALLATION:
+" DEPENDENCIES:
+" CONFIGURATION:
+" INTEGRATION:
+" LIMITATIONS:
+" ASSUMPTIONS:
+" KNOWN PROBLEMS:
+" TODO:
+" USAGE:
+"   <Tab>		Uses normal tab settings at the beginning of the line
+"			(before the first non-whitespace character), and inserts
+"			spaces otherwise.
+"   <BS>		Uses normal tab settings to delete tabs at the beginning
+"   of the line; elsewhere it also removes "space-expanded" tabs as if
+"	'softtabstop' is enabled. 
+"   smarttab
+	"   of the line; elsewhere it also removes "space-expanded" tabs as if
+	"	'softtabstop' is enabled. 
+	"   smarttab
+"
+" Copyright: (C) 2008 by Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"
+" Maintainer:	Ingo Karkat <ingo@karkat.de>
+"
+" REVISION	DATE		REMARKS 
+"	001	00-Jan-2008	file creation
+"	lalala
+"	    tab tab tab
+"	tab tab tab
+"           spc spc spc
+"       spc spc spc
+vmap x X
+
+"****D echomsg 'foobar'
+" **** !!!! $$$$ ^^^^
+
+##############################
+#! Perl / sh section
+## starts here. 
+# footed
+#	bill
+# For these lines, execute: 
+setlocal comments+=b:# 
+
+@REM echo off
+@REMEMBER ME
+REM Windows batch section
+REM starts here. 
+@REM footed
+REM	bill
+::::::::::::::::::::::::::::::
+::! Windows batch section
+:: starts here. 
+:: footed
+::	bill
+:: For these lines, execute: 
+: label
+setlocal comments=b:rem,b:@rem,b:REM,b:@REM,:::
+
+" In case filetype detection isn't done: 
+setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",:\"
+" Force a space after ": 
+setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",b:\"
+
+" vim: set filetype=vim sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
