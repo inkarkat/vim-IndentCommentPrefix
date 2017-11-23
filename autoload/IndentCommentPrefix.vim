@@ -5,12 +5,17 @@
 "   - ingo/comments.vim autoload script
 "   - vimscript #2136 repeat.vim autoload script (optional)
 "
-" Copyright: (C) 2008-2013 Ingo Karkat
+" Copyright: (C) 2008-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.33.005	24-Nov-2017	Supply 'i' flag (since Vim 7.4.601) to execute
+"				the insert mode in/dedent before typeahead (to
+"				avoid breaking macro playbacks). Using :normal
+"				is not an option here, as we need to trigger
+"				insert-mode <C-t> / <C-d>.
 "   1.32.004	02-May-2013	Move ingocomments.vim into ingo-library.
 "   1.32.003	10-Apr-2013	Move ingoplugins.vim into ingo-library.
 "   1.30.002	12-Dec-2012	ENH: Add global and buffer-local whitelists /
@@ -107,7 +112,7 @@ endfunction
 "------------------------------------------------------------------------------
 function! s:DoIndent( isDedent, isInsertMode, count )
     if a:isInsertMode
-	call feedkeys( repeat((a:isDedent ? "\<C-d>" : "\<C-t>"), a:count), 'n' )
+	call feedkeys(repeat((a:isDedent ? "\<C-d>" : "\<C-t>"), a:count), 'n' . (v:version == 704 && has('patch601') || v:version > 704 ? 'i': ''))
     else
 	" Use :silent to suppress reporting of changed line (when 'report' is
 	" 0).
@@ -158,7 +163,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 
     if empty(l:prefix)
 	" No prefix in this line.
-	call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
+	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return virtcol('.') " The built-in indent commands automatically adjust the cursor column.
     endif
 
@@ -168,7 +173,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 	if empty(l:commentPrefixType) || index(ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_Blacklist', []), l:prefixChars) != -1
 	    " This is not a comment prefix located at the start of the line.
 	    " Or this comment prefix is contained in the blacklist.
-	    call s:DoIndent( a:isDedent, a:isInsertMode, a:count )
+	    call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	    return virtcol('.') " The built-in indent commands automatically adjust the cursor column.
 	endif
 	let l:isBlankRequiredAfterPrefix = l:commentPrefixType[1]
@@ -189,13 +194,13 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " done with <Tab>.
     call s:SubstituteHere('/^\V\C' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
 
-    call s:DoIndent( a:isDedent, 0, a:count )
+    call s:DoIndent(a:isDedent, 0, a:count)
 
     " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
     " replace spaces with prefix so that the overall indentation remains fixed.
     " Note: We have to re-evaluate because the softtabstop setting may have
     " changed <Tab> into spaces and vice versa.
-    let l:newIndent = matchstr( getline(l:line), '^\s' )
+    let l:newIndent = matchstr(getline(l:line), '^\s')
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting.
     call s:SubstituteHere('/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/')
@@ -212,18 +217,18 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: This calculation ignores a:count, see note in function
     " documentation.
     let l:newVirtCol = l:virtCol
-    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < &l:sw
+    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < &l:shiftwidth
 	" If the former indent was less than one shiftwidth and indenting was
 	" done via spaces, this reduces the net change of cursor position.
 	let l:newVirtCol -= len(l:prefix . l:indent)
-    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:sw
+    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:shiftwidth
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position.
 	let l:newVirtCol += len(l:prefix) + (l:isBlankRequiredAfterPrefix ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before.
-    let l:newVirtCol += (a:isDedent ? -1 : 1) * &l:sw
+    let l:newVirtCol += (a:isDedent ? -1 : 1) * &l:shiftwidth
 
 "****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
     return l:newVirtCol
