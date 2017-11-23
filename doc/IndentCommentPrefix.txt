@@ -106,6 +106,8 @@ contained in 'comments' then. >
 If you want to use different mappings instead of overriding the default
 commands, map your keys to the <Plug>IndentCommentPrefix... mapping targets
 _before_ sourcing the script (e.g. in your |vimrc|): >
+    imap <C-t> <Plug>IndentCommentPrefixIndent
+    imap <C-d> <Plug>IndentCommentPrefixDedent
     nmap <Leader>>     <Plug>IndentCommentPrefix0
     vmap <Leader>>     <Plug>IndentCommentPrefix0
     nmap <Leader><lt>  <Plug>IndentCommentPrefix1
@@ -146,6 +148,11 @@ IDEAS						   *IndentCommentPrefix-ideas*
 
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
+
+1.33	RELEASEME
+- Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
+  before typeahead (to avoid breaking macro playbacks).
+- ENH: Define <Plug>-imaps for <C-d> / <C-t> to allow remapping of those, too.
 
 1.32	19-Nov-2013
 - Add special case to handle the (rather obscure) |i_0_CTRL-D| and
@@ -208,7 +215,7 @@ Initial publish.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2013 Ingo Karkat
+Copyright: (C) 2008-2017 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
