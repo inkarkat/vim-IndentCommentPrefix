@@ -4,12 +4,16 @@
 "   - Requires Vim 7.0 or higher.
 "   - IndentCommentPrefix.vim autoload script
 "
-" Copyright: (C) 2008-2013 Ingo Karkat
+" Copyright: (C) 2008-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.33.006	24-Nov-2017	ENH: Define <Plug>-imaps for <C-d> / <C-t> to
+"				allow remapping of those, too. Consider the
+"				i_0_CTRL-D / i_^_CTRL-D overload in the default
+"				mapping as before.
 "   1.32.005	07-May-2013	Add special case to handle the (rather obscure)
 "				|i_0_CTRL-D| and |i_^_CTRL-D| commands, which
 "				were broken by the plugin's insert mode mapping.
@@ -53,7 +57,10 @@ endif
 
 "- mappings --------------------------------------------------------------------
 
-inoremap <silent> <C-t> <C-o>:call IndentCommentPrefix#InsertMode(0)<CR>
+inoremap <silent> <Plug>IndentCommentPrefixIndent <C-o>:call IndentCommentPrefix#InsertMode(0)<CR>
+if ! hasmapto('<Plug>IndentCommentPrefixIndent')
+    imap <C-t> <Plug>IndentCommentPrefixIndent
+endif
 
 function! s:ControlDExpression()
     " Special case to handle the |i_0_CTRL-D| and |i_^_CTRL-D| commands.
@@ -67,7 +74,11 @@ function! s:ControlDExpression()
 
     return "\<C-o>:call IndentCommentPrefix#InsertMode(1)\<CR>"
 endfunction
-inoremap <silent> <expr> <C-d> <SID>ControlDExpression()
+inoremap <silent> <expr> <Plug>IndentCommentPrefixControlD <SID>ControlDExpression()
+inoremap <silent> <Plug>IndentCommentPrefixDedent <C-o>:call IndentCommentPrefix#InsertMode(1)<CR>
+if ! hasmapto('<Plug>IndentCommentPrefixDedent')
+    imap <C-d> <Plug>IndentCommentPrefixControlD
+endif
 
 nnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>call IndentCommentPrefix#Range(0,1,v:count1)<CR>
 vnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>'<,'>call IndentCommentPrefix#Range(0,v:count1,1)<CR>
