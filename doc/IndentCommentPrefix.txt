@@ -147,11 +147,12 @@ IDEAS						   *IndentCommentPrefix-ideas*
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
-1.32	RELEASEME
-- Add dependency to ingo-library (vimscript #4433).
+1.32	19-Nov-2013
 - Add special case to handle the (rather obscure) |i_0_CTRL-D| and
   |i_^_CTRL-D| commands, which were broken by the plugin's insert mode
   mapping.
+- Add dependency to ingo-library (vimscript #4433). *** You need to separately
+  install ingo-library (vimscript #4433) version 1.005 (or higher)! ***
 
 1.31	25-Jan-2013
 Also define opposite g<< commands with
