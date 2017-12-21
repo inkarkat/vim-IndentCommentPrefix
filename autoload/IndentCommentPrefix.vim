@@ -11,6 +11,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.40.006	24-Nov-2017	ENH: Add IndentCommentPrefix#InsertToggled()
+"				wrapper for IndentCommentPrefix#InsertMode()
+"				that implements toggling of 'shiftwidth' /
+"				single space indenting via a separate toggle
+"				mapping.
 "   1.33.005	24-Nov-2017	Supply 'i' flag (since Vim 7.4.601) to execute
 "				the insert mode in/dedent before typeahead (to
 "				avoid breaking macro playbacks). Using :normal
@@ -269,6 +274,28 @@ function! IndentCommentPrefix#InsertMode( isDedent )
     if l:newVirtCol > 1
 	call search('\%>' . (l:newVirtCol - 1) . 'v', 'c', line('.'))
     endif
+endfunction
+function! IndentCommentPrefix#InsertToggled( isDedent, isToggle )
+    if ! exists('b:lastIndentCommentPrefixLine') || b:lastIndentCommentPrefixLine != line('.')
+	let b:lastIndentCommentPrefixIsSingleSpace = 0
+    endif
+    let b:lastIndentCommentPrefixLine = line('.')
+
+    if a:isToggle
+	let b:lastIndentCommentPrefixIsSingleSpace = ! b:lastIndentCommentPrefixIsSingleSpace
+    endif
+
+    if b:lastIndentCommentPrefixIsSingleSpace
+	let l:save_shiftwidth = &l:shiftwidth
+	setlocal shiftwidth=1
+    endif
+    try
+	call IndentCommentPrefix#InsertMode(a:isDedent)
+    finally
+	if exists('l:save_shiftwidth')
+	    let &l:shiftwidth = l:save_shiftwidth
+	endif
+    endtry
 endfunction
 
 function! IndentCommentPrefix#Range( isDedent, count, lineNum ) range
