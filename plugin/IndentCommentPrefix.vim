@@ -10,6 +10,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.40.007	24-Nov-2017	ENH: Define separate i_CTRL-G_CTRL-D /
+"				i_CTRL-G_CTRL-T mappings that toggle the
+"				dedenting / indenting granularity from the
+"				default 'shiftwidth' to a single space. This can
+"				be helpful to do precise alignments outside of
+"				the tabstop grid.
 "   1.33.006	24-Nov-2017	ENH: Define <Plug>-imaps for <C-d> / <C-t> to
 "				allow remapping of those, too. Consider the
 "				i_0_CTRL-D / i_^_CTRL-D overload in the default
@@ -57,7 +63,7 @@ endif
 
 "- mappings --------------------------------------------------------------------
 
-inoremap <silent> <Plug>IndentCommentPrefixIndent <C-o>:call IndentCommentPrefix#InsertMode(0)<CR>
+inoremap <silent> <Plug>IndentCommentPrefixIndent <C-o>:call IndentCommentPrefix#InsertToggled(0, 0)<CR>
 if ! hasmapto('<Plug>IndentCommentPrefixIndent')
     imap <C-t> <Plug>IndentCommentPrefixIndent
 endif
@@ -72,13 +78,23 @@ function! s:ControlDExpression()
 	return "\<C-d>"
     endif
 
-    return "\<C-o>:call IndentCommentPrefix#InsertMode(1)\<CR>"
+    return "\<C-o>:call IndentCommentPrefix#InsertToggled(1, 0)\<CR>"
 endfunction
 inoremap <silent> <expr> <Plug>IndentCommentPrefixControlD <SID>ControlDExpression()
-inoremap <silent> <Plug>IndentCommentPrefixDedent <C-o>:call IndentCommentPrefix#InsertMode(1)<CR>
+inoremap <silent> <Plug>IndentCommentPrefixDedent <C-o>:call IndentCommentPrefix#InsertToggled(1, 0)<CR>
 if ! hasmapto('<Plug>IndentCommentPrefixDedent')
     imap <C-d> <Plug>IndentCommentPrefixControlD
 endif
+
+inoremap <silent> <Plug>IndentCommentPrefixToggleIndent <C-o>:call IndentCommentPrefix#InsertToggled(0, 1)<CR>
+inoremap <silent> <Plug>IndentCommentPrefixToggleDedent <C-o>:call IndentCommentPrefix#InsertToggled(1, 1)<CR>
+if ! hasmapto('<Plug>IndentCommentPrefixToggleIndent')
+    imap <C-g><C-t> <Plug>IndentCommentPrefixToggleIndent
+endif
+if ! hasmapto('<Plug>IndentCommentPrefixToggleDedent')
+    imap <C-g><C-d> <Plug>IndentCommentPrefixToggleDedent
+endif
+
 
 nnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>call IndentCommentPrefix#Range(0,1,v:count1)<CR>
 vnoremap <silent> <Plug>IndentCommentPrefix0 :<C-u>call setline('.', getline('.'))<Bar>'<,'>call IndentCommentPrefix#Range(0,v:count1,1)<CR>
