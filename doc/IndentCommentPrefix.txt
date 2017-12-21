@@ -118,6 +118,13 @@ column 1, but with any existing indent, add each prefix to the following
 (buffer-local or global) List variable. These prefixes do not need to be
 contained in 'comments' then. >
     let g:IndentCommentPrefix_Whitelist = ['REMARK:']
+<				*g:IndentCommentPrefix_IndentSettingsOverride*
+				*b:IndentCommentPrefix_IndentSettingsOverride*
+You may want to use a different 'shiftwidth' or 'expandtab' setting for
+indenting with a comment prefix (vs. "normal" indenting without comments), you
+can define the settings globally (or alternatively for the current buffer)
+via: >
+    let g:IndentCommentPrefix_IndentSettingsOverride = 'shiftwidth=3 expandtab'
 <
 
 						   *IndentCommentPrefix-remap*
@@ -174,6 +181,8 @@ HISTORY						 *IndentCommentPrefix-history*
 - ENH: Add IndentCommentPrefix#InsertToggled() wrapper for
   IndentCommentPrefix#InsertMode() that implements toggling of 'shiftwidth' /
   single space indenting via a separate toggle mapping.
+- ENH: Allow overriding the 'shiftwidth' and 'expandtab' indent settings for
+  indenting of comment prefixes via
 
 1.32	19-Nov-2013
 - Add special case to handle the (rather obscure) |i_0_CTRL-D| and
