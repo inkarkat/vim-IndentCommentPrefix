@@ -48,7 +48,25 @@ be indented; the |v_>| and |v_<| commands operate on all highlighted lines.
 With the optional repeat.vim script, the commands can also be repeated via |.|.
 
 The same behavior is available in insert mode via the |i_CTRL-T| and
-|i_CTRL-D| mappings.
+|i_CTRL-D| mappings:
+								    *i_CTRL-T*
+CTRL-T		Insert one shiftwidth of indent at the start of the current
+		line, after any comment prefix. The indent is always rounded
+		to a 'shiftwidth'.
+								    *i_CTRL-D*
+CTRL-D		Delete one shiftwidth of indent at the start of the current
+		line, after any comment prefix. The indent is always rounded
+		to a 'shiftwidth'.
+							     *i_CTRL-G_CTRL-T*
+CTRL-G CTRL-T	Insert a single space of indent at the start of the current
+		line, after any comment prefix, and toggle the behavior of
+		|i_CTRL-D| to continue inserting a single space instead of one
+		shiftwidth.
+							     *i_CTRL-G_CTRL-D*
+CTRL-G CTRL-D	Delete a single space of indent at the start of the current
+		line, after any comment prefix, and toggle the behavior of
+		|i_CTRL-D| to continue deleting a single space instead of one
+		shiftwidth.
 
 GETTING BACK THE ORIGINAL BEHAVIOR					     *
 						     *g>>* *v_g>* *g<<* *v_g<*
@@ -149,10 +167,13 @@ IDEAS						   *IndentCommentPrefix-ideas*
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
-1.33	RELEASEME
+1.40	RELEASEME
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
   before typeahead (to avoid breaking macro playbacks).
 - ENH: Define <Plug>-imaps for <C-d> / <C-t> to allow remapping of those, too.
+- ENH: Add IndentCommentPrefix#InsertToggled() wrapper for
+  IndentCommentPrefix#InsertMode() that implements toggling of 'shiftwidth' /
+  single space indenting via a separate toggle mapping.
 
 1.32	19-Nov-2013
 - Add special case to handle the (rather obscure) |i_0_CTRL-D| and
