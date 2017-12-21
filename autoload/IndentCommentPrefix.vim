@@ -11,6 +11,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.40.007	22-Dec-2017	ENH: Allow overriding the 'shiftwidth' and
+"				'expandtab' indent settings for indenting of
+"				comment prefixes via
+"				g:IndentCommentPrefix_IndentSettingsOverride.
+"				Add s:DoIndentWithOverride() for that.
 "   1.40.006	24-Nov-2017	ENH: Add IndentCommentPrefix#InsertToggled()
 "				wrapper for IndentCommentPrefix#InsertMode()
 "				that implements toggling of 'shiftwidth' /
@@ -124,6 +129,22 @@ function! s:DoIndent( isDedent, isInsertMode, count )
 	execute 'silent normal!' repeat((a:isDedent ? '<<' : '>>'), a:count)
     endif
 endfunction
+function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
+    let l:overriddenIndentSettings = ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride')
+    if empty(l:overriddenIndentSettings)
+	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
+	return &l:shiftwidth
+    endif
+
+    let [l:save_shiftwidth, l:save_expandtab] = [&l:shiftwidth, &l:expandtab]
+    execute 'setlocal' l:overriddenIndentSettings
+    try
+	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
+	return &l:shiftwidth
+    finally
+	let [&l:shiftwidth, &l:expandtab] = [l:save_shiftwidth, l:save_expandtab]
+    endtry
+endfunction
 function! s:SubstituteHere( substituitionCmd )
     " Use :silent! to suppress any error messages or reporting of changed line
     " (when 'report' is 0).
@@ -199,7 +220,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " done with <Tab>.
     call s:SubstituteHere('/^\V\C' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
 
-    call s:DoIndent(a:isDedent, 0, a:count)
+    let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count)
 
     " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
     " replace spaces with prefix so that the overall indentation remains fixed.
@@ -222,18 +243,18 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: This calculation ignores a:count, see note in function
     " documentation.
     let l:newVirtCol = l:virtCol
-    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < &l:shiftwidth
+    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < l:actualShiftwidth
 	" If the former indent was less than one shiftwidth and indenting was
 	" done via spaces, this reduces the net change of cursor position.
 	let l:newVirtCol -= len(l:prefix . l:indent)
-    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= &l:shiftwidth
+    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= l:actualShiftwidth
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position.
 	let l:newVirtCol += len(l:prefix) + (l:isBlankRequiredAfterPrefix ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before.
-    let l:newVirtCol += (a:isDedent ? -1 : 1) * &l:shiftwidth
+    let l:newVirtCol += (a:isDedent ? -1 : 1) * l:actualShiftwidth
 
 "****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
     return l:newVirtCol
