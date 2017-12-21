@@ -10,6 +10,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.40.008	22-Dec-2017	Add g:IndentCommentPrefix_IndentSettingsOverride
+"				configuration.
 "   1.40.007	24-Nov-2017	ENH: Define separate i_CTRL-G_CTRL-D /
 "				i_CTRL-G_CTRL-T mappings that toggle the
 "				dedenting / indenting granularity from the
@@ -58,6 +60,10 @@ endif
 
 if ! exists('g:IndentCommentPrefix_alternativeOriginalCommands')
     let g:IndentCommentPrefix_alternativeOriginalCommands = 1
+endif
+
+if ! exists('g:IndentCommentPrefix_IndentSettingsOverride')
+    let g:IndentCommentPrefix_IndentSettingsOverride = ''
 endif
 
 
