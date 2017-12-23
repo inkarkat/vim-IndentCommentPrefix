@@ -1,118 +1,14 @@
 " IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting.
 "
 " DEPENDENCIES:
-"   - ingo/plugin/setting.vim autoload script
 "   - ingo/comments.vim autoload script
-"   - vimscript #2136 repeat.vim autoload script (optional)
+"   - ingo/plugin/setting.vim autoload script
+"   - repeat.vim (vimscript #2136) autoload script (optional)
 "
 " Copyright: (C) 2008-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.40.007	22-Dec-2017	ENH: Allow overriding the 'shiftwidth' and
-"				'expandtab' indent settings for indenting of
-"				comment prefixes via
-"				g:IndentCommentPrefix_IndentSettingsOverride.
-"				Add s:DoIndentWithOverride() for that.
-"   1.40.006	24-Nov-2017	ENH: Add IndentCommentPrefix#InsertToggled()
-"				wrapper for IndentCommentPrefix#InsertMode()
-"				that implements toggling of 'shiftwidth' /
-"				single space indenting via a separate toggle
-"				mapping.
-"   1.33.005	24-Nov-2017	Supply 'i' flag (since Vim 7.4.601) to execute
-"				the insert mode in/dedent before typeahead (to
-"				avoid breaking macro playbacks). Using :normal
-"				is not an option here, as we need to trigger
-"				insert-mode <C-t> / <C-d>.
-"   1.32.004	02-May-2013	Move ingocomments.vim into ingo-library.
-"   1.32.003	10-Apr-2013	Move ingoplugins.vim into ingo-library.
-"   1.30.002	12-Dec-2012	ENH: Add global and buffer-local whitelists /
-"				blacklists to explicitly include / exclude
-"				certain comment prefixes.
-"   1.20.014	22-Sep-2011	FIX: Now handling three-piece comments
-"				correctly. The start may set a positive indent
-"				offset for the middle and end comment prefixes
-"				that must be considered.
-"				Factor out processing of 'comments' to
-"				ingocomments.vim autoload script, so that the
-"				functionality can be reused in
-"				IndentTab/CommentPrefix.vim.
-"				FIX: Suppress 'ignorecase' in s:Literal().
-"   1.11.013	20-Sep-2011	Minor code simplification.
-"   1.10.012	30-Mar-2011	Split off separate documentation and autoload
-"				script.
-"   1.10.011	29-Mar-2011	BUG: Only report changes if more than 'report'
-"				lines where indented; I got the meaning of
-"				'report' wrong the first time.
-"				BUG: Could not use 999>> to indent all remaining
-"				lines. Fix by explicitly passing v:count1 to
-"				s:IndentKeepCommentPrefixRange() from normal
-"				mode mappings and calculating the last line with
-"				a cap, instead of using the implicit
-"				:call-range.
-"				BUG: Normal-mode mapping didn't necessarily put
-"				the cursor on the first non-blank character
-"				after the comment prefix if 'nostartofline' is
-"				set.
-"				ENH: In normal and visual mode, set the change
-"				marks '[ and ]' similar to what Vim does.
-"   1.02.010	06-Oct-2009	Do not define mappings for select mode;
-"				printable characters should start insert mode.
-"   1.01.009	03-Jul-2009	BF: When 'report' is less than the default 2,
-"				the :substitute and << / >> commands created
-"				additional messages, causing a hit-enter prompt.
-"				Now also reporting a single-line change when
-"				'report' is 0 (to be consistent with the
-"				built-in indent commands).
-"   1.00.008	23-Feb-2009	BF: Fixed "E61: Nested *" that occurred when
-"				shifting a line with a comment prefix containing
-"				multiple asterisks in a row (e.g. '**'). This
-"				was caused by a mixed up argument escaping in
-"				s:IsMatchInComments() and one missed escaping
-"				elsewhere.
-"				BF: Info message (given when indenting multiple
-"				lines) always printed "1 time" even when a
-"				[count] was specified in visual mode.
-"   1.00.007	29-Jan-2009	BF: Test whether prefix is a comment was too
-"				primitive and failed to distinguish between ':'
-"				(label) and '::' (comment) in dosbatch filetype.
-"				Now using exact regexp factored out into a
-"				function, also for the blank-required check.
-"	006	22-Jan-2009	Added visual mode mappings.
-"				Enhanced implementation to deal with the
-"				optional [count] 'shiftwidth's that can be
-"				specified in visual mode.
-"	005	04-Jan-2009	BF: Fixed changes of vertical window position by
-"				saving and restoring window view.
-"				ENH: The >> and << (range) commands now position
-"				the cursor on the first non-blank character
-"				after the comment prefix; this makes more sense.
-"				Now avoiding superfluous cursor positioning when
-"				indenting ranges. (Side effect from the changes
-"				due to restore of window position.)
-"	004	21-Aug-2008	BF: Didn't consider that removing the comment
-"				prefix could cause changes in folding (e.g. in
-"				vimscript if the line ends with "if"), which
-"				then affects all indent operations, which now
-"				work on the closed fold instead of the current
-"				line. Now temporarily disabling folding.
-"				BF: The looping over the passed range in
-"				s:IndentKeepCommentPrefixRange() didn't consider
-"				closed folds, so those (except for a last-line
-"				fold) would be processed multiple times. Now
-"				that folding is temporarily disabling, need to
-"				account for the net end of the range.
-"				Added echo message when operating on more than
-"				one line, like the original >> commands.
-"	003	19-Aug-2008	BF: Indenting/detenting at the first shiftwidth
-"				caused cursor to move to column 1; now adjusting
-"				for the net reduction caused by the prefix.
-"	002	12-Aug-2008	Do not clobber search history with :s command.
-"				If a blank is required after the comment prefix,
-"				make sure it still exists when dedenting.
-"	001	11-Aug-2008	file creation
 
 function! s:Literal( string )
 " Helper: Make a:string a literal search expression.
