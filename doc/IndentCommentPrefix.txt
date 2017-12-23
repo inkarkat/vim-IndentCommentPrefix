@@ -85,10 +85,16 @@ operators aren't modified by this plugin.
 ==============================================================================
 INSTALLATION				    *IndentCommentPrefix-installation*
 
-This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
-the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the |:UseVimball| command. >
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-IndentCommentPrefix
+You can use your favorite plugin manager, or "git clone" into a directory used
+for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+development snapshot on "master".
+
+This script is also packaged as a |vimball|. If you have the "gunzip"
+decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the |:UseVimball| command. >
     vim IndentCommentPrefix*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
@@ -171,10 +177,16 @@ TODO						    *IndentCommentPrefix-todo*
 
 IDEAS						   *IndentCommentPrefix-ideas*
 
+CONTRIBUTING				      *IndentCommentPrefix-contribute*
+
+Report any bugs, send patches, or suggest features via the issue tracker at
+https://github.com/inkarkat/vim-IndentCommentPrefix/issues or email (address
+below).
+
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
-1.40	RELEASEME
+1.40	23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
   before typeahead (to avoid breaking macro playbacks).
 - ENH: Define <Plug>-imaps for <C-d> / <C-t> to allow remapping of those, too.
