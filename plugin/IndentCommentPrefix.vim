@@ -8,40 +8,6 @@
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.40.008	22-Dec-2017	Add g:IndentCommentPrefix_IndentSettingsOverride
-"				configuration.
-"   1.40.007	24-Nov-2017	ENH: Define separate i_CTRL-G_CTRL-D /
-"				i_CTRL-G_CTRL-T mappings that toggle the
-"				dedenting / indenting granularity from the
-"				default 'shiftwidth' to a single space. This can
-"				be helpful to do precise alignments outside of
-"				the tabstop grid.
-"   1.33.006	24-Nov-2017	ENH: Define <Plug>-imaps for <C-d> / <C-t> to
-"				allow remapping of those, too. Consider the
-"				i_0_CTRL-D / i_^_CTRL-D overload in the default
-"				mapping as before.
-"   1.32.005	07-May-2013	Add special case to handle the (rather obscure)
-"				|i_0_CTRL-D| and |i_^_CTRL-D| commands, which
-"				were broken by the plugin's insert mode mapping.
-"   1.31.004	24-Jan-2013	Also define opposite g<< commands with
-"				g:IndentCommentPrefix_alternativeOriginalCommands.
-"				It's good for consistency (my muscle memory
-"				often cannot distingish indenting from
-"				dedenting), and necessary when using the
-"				g:IndentCommentPrefix_Whitelist, because those
-"				work not just in column 1 (where dedenting is
-"				not possible), but in any column.
-"   1.30.003	13-Dec-2012	Handle readonly and nomodifiable buffers by
-"				printing just the warning / error, without
-"				the multi-line function error.
-"   1.30.002	12-Dec-2012	ENH: Add global and buffer-local whitelists /
-"				blacklists to explicitly include / exclude
-"				certain comment prefixes.
-"   1.10.001	30-Mar-2011	Split off separate documentation and autoload
-"				script.
-"				file creation.
 
 " Avoid installing twice or when in unsupported Vim version.
 if exists('g:loaded_IndentCommentPrefix') || (v:version < 700)

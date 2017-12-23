@@ -186,7 +186,7 @@ below).
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
-1.40	RELEASEME
+1.40	23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
   before typeahead (to avoid breaking macro playbacks).
 - ENH: Define <Plug>-imaps for <C-d> / <C-t> to allow remapping of those, too.
