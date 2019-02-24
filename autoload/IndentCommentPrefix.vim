@@ -5,7 +5,7 @@
 "   - ingo/plugin/setting.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 "
-" Copyright: (C) 2008-2017 Ingo Karkat
+" Copyright: (C) 2008-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -26,7 +26,7 @@ function! s:DoIndent( isDedent, isInsertMode, count )
     endif
 endfunction
 function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
-    let l:overriddenIndentSettings = ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride')
+    let l:overriddenIndentSettings = ingo#actions#ValueOrFunc(ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride'))
     if empty(l:overriddenIndentSettings)
 	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return &l:shiftwidth

@@ -131,7 +131,9 @@ indenting with a comment prefix (vs. "normal" indenting without comments), you
 can define the settings globally (or alternatively for the current buffer)
 via: >
     let g:IndentCommentPrefix_IndentSettingsOverride = 'shiftwidth=3 expandtab'
-<
+The settings value can also be determined dynamically by supplying a Funcref;
+this is called (without arguments) on each plugin indent action and should
+return the corresponding indent settings as a String.
 
 						   *IndentCommentPrefix-remap*
 If you want to use different mappings instead of overriding the default
@@ -185,6 +187,10 @@ below).
 
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
+
+1.41	RELEASEME
+- ENH: Allow dynamic g:IndentCommentPrefix_IndentSettingsOverride via Funcref.
+  For example, to expand tabs only if the comment prefix isn't in column 1.
 
 1.40	23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
@@ -257,7 +263,7 @@ Initial publish.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2017 Ingo Karkat
+Copyright: (C) 2008-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

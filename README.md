@@ -1,4 +1,4 @@
-INDENT COMMENT PREFIX   
+INDENT COMMENT PREFIX
 ===============================================================================
 _by Ingo Karkat_
 
@@ -125,6 +125,10 @@ via:
 
     let g:IndentCommentPrefix_IndentSettingsOverride = 'shiftwidth=3 expandtab'
 
+The settings value can also be determined dynamically by supplying a Funcref;
+this is called (without arguments) on each plugin indent action and should
+return the corresponding indent settings as a String.
+
 If you want to use different mappings instead of overriding the default
 commands, map your keys to the <Plug>IndentCommentPrefix... mapping targets
 _before_ sourcing the script (e.g. in your vimrc):
@@ -174,6 +178,10 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 1.41    RELEASEME
+- ENH: Allow dynamic g:IndentCommentPrefix\_IndentSettingsOverride via Funcref.
+  For example, to expand tabs only if the comment prefix isn't in column 1.
+
 ##### 1.40    23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
   before typeahead (to avoid breaking macro playbacks).
@@ -188,7 +196,9 @@ HISTORY
 - Add special case to handle the (rather obscure) i\_0\_CTRL-D and
   i\_^\_CTRL-D commands, which were broken by the plugin's insert mode
   mapping.
-- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)). __You need to separately
+- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)).
+
+__You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.005 (or higher)!__
 
 ##### 1.31    25-Jan-2013
@@ -244,7 +254,7 @@ built-in indent commands).
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2017 Ingo Karkat -
+Copyright: (C) 2008-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat <ingo@karkat.de>
