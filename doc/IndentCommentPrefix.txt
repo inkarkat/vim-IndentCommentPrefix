@@ -102,7 +102,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				    *IndentCommentPrefix-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.005 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.037 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 
@@ -191,6 +191,7 @@ HISTORY						 *IndentCommentPrefix-history*
 1.41	RELEASEME
 - ENH: Allow dynamic g:IndentCommentPrefix_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
+  *** You need to update to ingo-library (vimscript #4433) version 1.037! ***
 
 1.40	23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent

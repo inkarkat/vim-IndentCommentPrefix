@@ -5,7 +5,7 @@ _by Ingo Karkat_
 DESCRIPTION
 ------------------------------------------------------------------------------
 
-Indent commands like >>, << and i\_CTRL-T, i\_CTRL-D in insert mode
+Indent commands like &gt;&gt;, &lt;&lt; and i\_CTRL-T, i\_CTRL-D in insert mode
 indent the entire line. For some kinds of comments, like the big boilerplate
 at the file header etc., the comment prefix (e.g. # for Perl scripts) should
 remain at the first column, though.
@@ -95,7 +95,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.005 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.037 or
   higher.
 - repeat.vim ([vimscript #2136](http://www.vim.org/scripts/script.php?script_id=2136)) plugin (optional)
 
@@ -130,7 +130,7 @@ this is called (without arguments) on each plugin indent action and should
 return the corresponding indent settings as a String.
 
 If you want to use different mappings instead of overriding the default
-commands, map your keys to the <Plug>IndentCommentPrefix... mapping targets
+commands, map your keys to the &lt;Plug&gt;IndentCommentPrefix... mapping targets
 _before_ sourcing the script (e.g. in your vimrc):
 
     imap <C-t> <Plug>IndentCommentPrefixIndent
@@ -140,7 +140,7 @@ _before_ sourcing the script (e.g. in your vimrc):
     nmap <Leader><lt>  <Plug>IndentCommentPrefix1
     vmap <Leader><lt>  <Plug>IndentCommentPrefix1
 
-If you don't want the alternative g>> and g<< mappings for the original indent
+If you don't want the alternative g&gt;&gt; and g&lt;&lt; mappings for the original indent
 commands, set the following variable _before_ sourcing the plugin:
 
     let g:IndentCommentPrefix_alternativeOriginalCommands = 0
@@ -148,16 +148,16 @@ commands, set the following variable _before_ sourcing the plugin:
 KNOWN PROBLEMS
 ------------------------------------------------------------------------------
 
-- When indenting in insert mode via <C-T>/<C-D>, the cursor position may be
-  off if there are <Tab> characters in the indented text itself (not just
+- When indenting in insert mode via &lt;C-T&gt;/&lt;C-D&gt;, the cursor position may be
+  off if there are &lt;Tab&gt; characters in the indented text itself (not just
   between the prefix and the indented text), and the cursor is positioned
-  somewhere behind such a <Tab> character. The changing virtual width of these
-  <Tab> characters isn't considered when calculating the new virtual cursor
+  somewhere behind such a &lt;Tab&gt; character. The changing virtual width of these
+  &lt;Tab&gt; characters isn't considered when calculating the new virtual cursor
   column.
 - With ':set list' and if ':set listchars' does not include a 'tab:xy' item,
   tabs show up as ^I and do not occupy the full width (up to 'tabstop'
   characters). This shortened representation throws off the cursor position
-  when indenting in insert mode via <C-T>/<C-D>.
+  when indenting in insert mode via &lt;C-T&gt;/&lt;C-D&gt;.
 - If a visual mode '.' repeat command is defined to repeat the last change on
   all highlighted lines, and the previous indent operation used a [count]
   greater than 1, the highlighted lines will be indented multiple times and
@@ -167,7 +167,7 @@ KNOWN PROBLEMS
 
 ### TODO
 
-- Does it make sense to also modify the >{motion} operators?
+- Does it make sense to also modify the &gt;{motion} operators?
 
 ### CONTRIBUTING
 
@@ -182,10 +182,12 @@ HISTORY
 - ENH: Allow dynamic g:IndentCommentPrefix\_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
 
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.037!__
+
 ##### 1.40    23-Dec-2017
 - Supply 'i' flag (since Vim 7.4.601) to execute the insert mode in/dedent
   before typeahead (to avoid breaking macro playbacks).
-- ENH: Define <Plug>-imaps for <C-d> / <C-t> to allow remapping of those, too.
+- ENH: Define &lt;Plug&gt;-imaps for &lt;C-d&gt; / &lt;C-t&gt; to allow remapping of those, too.
 - ENH: Add IndentCommentPrefix#InsertToggled() wrapper for
   IndentCommentPrefix#InsertMode() that implements toggling of 'shiftwidth' /
   single space indenting via a separate toggle mapping.
@@ -202,7 +204,7 @@ __You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.005 (or higher)!__
 
 ##### 1.31    25-Jan-2013
-- Also define opposite g<< commands with
+- Also define opposite g&lt;&lt; commands with
 g:IndentCommentPrefix\_alternativeOriginalCommands. It's good for consistency
 (my muscle memory often cannot distingish indenting from dedenting), and
 necessary when using the g:IndentCommentPrefix\_Whitelist, because those work
@@ -225,7 +227,7 @@ not just in column 1 (where dedenting is not possible), but in any column.
   Vimball.
 - BUG: Only report changes if more than 'report' lines where indented; I got
   the meaning of 'report' wrong the first time.
-- BUG: Could not use 999>> to indent all remaining lines.
+- BUG: Could not use 999&gt;&gt; to indent all remaining lines.
 - BUG: Normal-mode mapping didn't necessarily put the cursor on the first
   non-blank character after the comment prefix if 'nostartofline' is set.
 - ENH: In normal and visual mode, set the change marks '[ and ]' similar to
@@ -236,7 +238,7 @@ not just in column 1 (where dedenting is not possible), but in any column.
 insert mode.
 
 ##### 1.01.009    05-Jul-2009
-- BF: When 'report' is less than the default 2, the :substitute and << / >>
+- BF: When 'report' is less than the default 2, the :substitute and &lt;&lt; / &gt;&gt;
 commands created additional messages, causing a hit-enter prompt.  Now also
 reporting a single-line change when 'report' is 0 (to be consistent with the
 built-in indent commands).
@@ -257,4 +259,4 @@ built-in indent commands).
 Copyright: (C) 2008-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

@@ -1,8 +1,7 @@
 " IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting.
 "
 " DEPENDENCIES:
-"   - ingo/comments.vim autoload script
-"   - ingo/plugin/setting.vim autoload script
+"   - ingo-library.vim plugin
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 "
 " Copyright: (C) 2008-2019 Ingo Karkat
@@ -267,8 +266,7 @@ function! IndentCommentPrefix#Range( isDedent, count, lineNum ) range
     " Set the change marks similar to what Vim does. (I don't grasp the logic
     " for '[, but using the first non-blank character seems reasonable to me.)
     " This must somehow be done after the call to repeat.vim.
-    call setpos("'[", l:startChangePosition)
-    call setpos("']", [0, l:netLastLine, strlen(getline(l:netLastLine)), 0])
+    call ingo#change#Set(l:startChangePosition, ingo#pos#Make4(l:netLastLine, strlen(getline(l:netLastLine))))
 
     let l:lineNum = l:netLastLine - a:firstline + 1
     if l:lineNum > &report
