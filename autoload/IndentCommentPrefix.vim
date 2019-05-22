@@ -119,7 +119,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:newIndent = matchstr(getline(l:line), '^\s')
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting.
-    call s:SubstituteHere('^' . (l:newIndent == ' ' ? '\%( \{' . l:prefixWidth . '}\)\?' : ''), escape(l:prefix, '\&'))
+    call s:SubstituteHere('^' . (l:newIndent == ' ' ? ' \{0,' . l:prefixWidth . '}' : ''), escape(l:prefix, '\&'))
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting.
