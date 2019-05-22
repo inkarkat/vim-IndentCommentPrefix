@@ -124,7 +124,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting.
     if l:isBlankRequiredAfterPrefix && a:isDedent
-	call s:SubstituteHere('^' . escape(l:prefix, '\') . '\ze\S', '\0 ')
+	call s:SubstituteHere('^\V\C' . escape(l:prefix, '\') . '\ze\S', '\0 ')
     endif
 
 
