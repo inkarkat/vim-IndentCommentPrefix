@@ -40,11 +40,11 @@ function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
 	let [&l:shiftwidth, &l:expandtab] = [l:save_shiftwidth, l:save_expandtab]
     endtry
 endfunction
-function! s:SubstituteHere( substituitionCmd )
+function! s:SubstituteHere( pattern, replacement )
     " Use :silent! to suppress any error messages or reporting of changed line
     " (when 'report' is 0).
     " Use :keepjumps to avoid modification of jump list.
-    execute 'silent! keepjumps s' . a:substituitionCmd
+    execute 'silent! keepjumps s/' . escape(a:pattern, '/') . '/' . escape(a:replacement, '\~') . '/e'
     call histdel('search', -1)
 endfunction
 function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
@@ -113,7 +113,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: We have to decide based on the actual indent, because with the
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>.
-    call s:SubstituteHere('/^\V\C' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
+    call s:SubstituteHere('^\V\C' . escape(l:prefix, '\'), (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : ''))
 
     let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count)
 
@@ -124,12 +124,12 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:newIndent = matchstr(getline(l:line), '^\s')
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting.
-    call s:SubstituteHere('/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/')
+    call s:SubstituteHere('^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : ''), escape(l:prefix, '\&'))
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting.
     if l:isBlankRequiredAfterPrefix && a:isDedent
-	call s:SubstituteHere('/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e')
+	call s:SubstituteHere('^' . escape(l:prefix, '\') . '\ze\S', '\0 ')
     endif
 
 
