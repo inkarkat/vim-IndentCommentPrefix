@@ -75,6 +75,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " three-piece comment.
     let l:matches = matchlist(getline(l:line), '^\(\s*\(\S\+\)\)\(\s*\)')
     let l:prefix = get(l:matches, 1, '')
+    let l:prefixWidth = len(l:prefix)
     let l:prefixChars = get(l:matches, 2, '')
     let l:indent = get(l:matches, 3, '')
 
@@ -109,7 +110,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: We have to decide based on the actual indent, because with the
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>.
-    call s:SubstituteHere('^\V\C' . escape(l:prefix, '\'), (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : ''))
+    call s:SubstituteHere('^\V\C' . escape(l:prefix, '\'), (l:isSpaceIndent ? repeat(' ', l:prefixWidth) : ''))
 
     let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count)
 
@@ -120,7 +121,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:newIndent = matchstr(getline(l:line), '^\s')
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting.
-    call s:SubstituteHere('^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : ''), escape(l:prefix, '\&'))
+    call s:SubstituteHere('^' . (l:newIndent == ' ' ? '\%( \{' . l:prefixWidth . '}\)\?' : ''), escape(l:prefix, '\&'))
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting.
@@ -134,14 +135,14 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: This calculation ignores a:count, see note in function
     " documentation.
     let l:newVirtCol = l:virtCol
-    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < l:actualShiftwidth
+    if ! a:isDedent && l:isSpaceIndent && l:prefixWidth + len(l:indent) < l:actualShiftwidth
 	" If the former indent was less than one shiftwidth and indenting was
 	" done via spaces, this reduces the net change of cursor position.
-	let l:newVirtCol -= len(l:prefix . l:indent)
-    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= l:actualShiftwidth
+	let l:newVirtCol -= l:prefixWidth + len(l:indent)
+    elseif a:isDedent && l:isSpaceIndent && l:prefixWidth + len(l:indent) <= l:actualShiftwidth
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position.
-	let l:newVirtCol += len(l:prefix) + (l:isBlankRequiredAfterPrefix ? 1 : 0)
+	let l:newVirtCol += l:prefixWidth + (l:isBlankRequiredAfterPrefix ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before.
