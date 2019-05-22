@@ -41,11 +41,7 @@ function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
     endtry
 endfunction
 function! s:SubstituteHere( pattern, replacement )
-    " Use :silent! to suppress any error messages or reporting of changed line
-    " (when 'report' is 0).
-    " Use :keepjumps to avoid modification of jump list.
-    execute 'silent! keepjumps s/' . escape(a:pattern, '/') . '/' . escape(a:replacement, '\~') . '/e'
-    call histdel('search', -1)
+    call setline('.', substitute(getline('.'), a:pattern, a:replacement, ''))
 endfunction
 function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "*******************************************************************************
