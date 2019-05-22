@@ -49,8 +49,6 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "   Enhanced indent / dedent replacement for >>, <<, i_CTRL-D, i_CTRL-T
 "   commands.
 "* ASSUMPTIONS / PRECONDITIONS:
-"   "Normal" prefix characters (i.e. they have screen width of 1 and are encoded
-"   by one byte); as we're using len(l:prefix) to calculate screen width.
 "   Folding should be turned off (:setlocal nofoldenable); otherwise, the
 "   modifications of the line (i.e. removing and re-adding the comment prefix)
 "   may result in creation / removal of folds, and suddenly the function
@@ -75,7 +73,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " three-piece comment.
     let l:matches = matchlist(getline(l:line), '^\(\s*\(\S\+\)\)\(\s*\)')
     let l:prefix = get(l:matches, 1, '')
-    let l:prefixWidth = len(l:prefix)
+    let l:prefixWidth = ingo#compat#strdisplaywidth(l:prefix)
     let l:prefixChars = get(l:matches, 2, '')
     let l:indent = get(l:matches, 3, '')
 
@@ -148,7 +146,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " considering the adjustments made before.
     let l:newVirtCol += (a:isDedent ? -1 : 1) * l:actualShiftwidth
 
-"****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
+"****D echomsg '****' l:virtCol l:newVirtCol l:prefixWidth + len(l:indent)
     return l:newVirtCol
 
     " Note: The cursor column isn't updated here anymore, because the window

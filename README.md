@@ -181,6 +181,7 @@ HISTORY
 ##### 1.41    RELEASEME
 - ENH: Allow dynamic g:IndentCommentPrefix\_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
+- Support double-width indent prefix characters.
 
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.037!__
 

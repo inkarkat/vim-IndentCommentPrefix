@@ -191,6 +191,7 @@ HISTORY						 *IndentCommentPrefix-history*
 1.41	RELEASEME
 - ENH: Allow dynamic g:IndentCommentPrefix_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
+- Support double-width indent prefix characters.
   *** You need to update to ingo-library (vimscript #4433) version 1.037! ***
 
 1.40	23-Dec-2017
