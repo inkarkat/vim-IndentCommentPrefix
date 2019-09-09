@@ -24,15 +24,14 @@ function! s:DoIndent( isDedent, isInsertMode, count )
 	execute 'silent normal!' repeat((a:isDedent ? '<<' : '>>'), a:count)
     endif
 endfunction
-function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
-    let l:overriddenIndentSettings = ingo#actions#ValueOrFunc(ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride'))
-    if empty(l:overriddenIndentSettings)
+function! s:DoIndentWithOverride( isDedent, isInsertMode, count, overriddenIndentSettings )
+    if empty(a:overriddenIndentSettings)
 	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return &l:shiftwidth
     endif
 
     let [l:save_shiftwidth, l:save_expandtab] = [&l:shiftwidth, &l:expandtab]
-    execute 'setlocal' l:overriddenIndentSettings
+    execute 'setlocal' a:overriddenIndentSettings
     try
 	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return &l:shiftwidth
@@ -103,6 +102,10 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:isSpaceIndent = (l:indent =~# '^ ')
     let l:virtCol = virtcol('.')
 
+    " Need to evaluate g:IndentCommentPrefix_IndentSettingsOverride now, before
+    " removing the prefix, so that a configured Funcref sees the original line.
+    let l:overriddenIndentSettings = ingo#actions#ValueOrFunc(ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride'))
+
     " If the actual indent is a <Tab>, remove the prefix. If it is <Space>,
     " replace prefix with spaces so that the overall indentation remains fixed.
     " Note: We have to decide based on the actual indent, because with the
@@ -110,7 +113,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " done with <Tab>.
     call s:SubstituteHere('^\V\C' . escape(l:prefix, '\'), (l:isSpaceIndent ? repeat(' ', l:prefixWidth) : ''))
 
-    let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count)
+    let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count, l:overriddenIndentSettings)
 
     " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
     " replace spaces with prefix so that the overall indentation remains fixed.
