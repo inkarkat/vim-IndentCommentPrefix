@@ -188,7 +188,7 @@ below).
 ==============================================================================
 HISTORY						 *IndentCommentPrefix-history*
 
-1.41	RELEASEME
+1.41	10-Nov-2024
 - ENH: Allow dynamic g:IndentCommentPrefix_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
 - Support double-width indent prefix characters.
@@ -265,7 +265,7 @@ Initial publish.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2019 Ingo Karkat
+Copyright: (C) 2008-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
