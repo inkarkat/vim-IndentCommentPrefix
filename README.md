@@ -178,7 +178,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.41    RELEASEME
+##### 1.41    10-Nov-2024
 - ENH: Allow dynamic g:IndentCommentPrefix\_IndentSettingsOverride via Funcref.
   For example, to expand tabs only if the comment prefix isn't in column 1.
 - Support double-width indent prefix characters.
@@ -257,7 +257,7 @@ built-in indent commands).
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2019 Ingo Karkat -
+Copyright: (C) 2008-2024 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
