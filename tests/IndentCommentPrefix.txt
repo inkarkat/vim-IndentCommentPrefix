@@ -22,7 +22,7 @@
 	"	'softtabstop' is enabled. 
 	"   smarttab
 "
-" Copyright: (C) 2008 by Ingo Karkat
+" Copyright: (C) 2008-2019 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -66,5 +66,14 @@ setlocal comments=b:rem,b:@rem,b:REM,b:@REM,:::
 setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",:\"
 " Force a space after ": 
 setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",b:\"
+
+	if count(s:marks.coords, {
+	"   "	"   "
+	\  'line' : line('.'),
+	\  'col' : virtcol('.'),
+"   "	"   "
+\   'line' : line('.'),
+\  'col' : virtcol('.'),
+	\})
 
 " vim: set filetype=vim sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

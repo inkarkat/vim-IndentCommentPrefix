@@ -1,11 +1,10 @@
 " IndentCommentPrefix.vim: Keep comment prefix in column 1 when indenting.
 "
 " DEPENDENCIES:
-"   - ingo/comments.vim autoload script
-"   - ingo/plugin/setting.vim autoload script
+"   - ingo-library.vim plugin
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 "
-" Copyright: (C) 2008-2017 Ingo Karkat
+" Copyright: (C) 2008-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -25,15 +24,14 @@ function! s:DoIndent( isDedent, isInsertMode, count )
 	execute 'silent normal!' repeat((a:isDedent ? '<<' : '>>'), a:count)
     endif
 endfunction
-function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
-    let l:overriddenIndentSettings = ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride')
-    if empty(l:overriddenIndentSettings)
+function! s:DoIndentWithOverride( isDedent, isInsertMode, count, overriddenIndentSettings )
+    if empty(a:overriddenIndentSettings)
 	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return &l:shiftwidth
     endif
 
     let [l:save_shiftwidth, l:save_expandtab] = [&l:shiftwidth, &l:expandtab]
-    execute 'setlocal' l:overriddenIndentSettings
+    execute 'setlocal' a:overriddenIndentSettings
     try
 	call s:DoIndent(a:isDedent, a:isInsertMode, a:count)
 	return &l:shiftwidth
@@ -41,12 +39,8 @@ function! s:DoIndentWithOverride( isDedent, isInsertMode, count )
 	let [&l:shiftwidth, &l:expandtab] = [l:save_shiftwidth, l:save_expandtab]
     endtry
 endfunction
-function! s:SubstituteHere( substituitionCmd )
-    " Use :silent! to suppress any error messages or reporting of changed line
-    " (when 'report' is 0).
-    " Use :keepjumps to avoid modification of jump list.
-    execute 'silent! keepjumps s' . a:substituitionCmd
-    call histdel('search', -1)
+function! s:SubstituteHere( pattern, replacement )
+    call setline('.', substitute(getline('.'), a:pattern, a:replacement, ''))
 endfunction
 function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "*******************************************************************************
@@ -54,8 +48,6 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
 "   Enhanced indent / dedent replacement for >>, <<, i_CTRL-D, i_CTRL-T
 "   commands.
 "* ASSUMPTIONS / PRECONDITIONS:
-"   "Normal" prefix characters (i.e. they have screen width of 1 and are encoded
-"   by one byte); as we're using len(l:prefix) to calculate screen width.
 "   Folding should be turned off (:setlocal nofoldenable); otherwise, the
 "   modifications of the line (i.e. removing and re-adding the comment prefix)
 "   may result in creation / removal of folds, and suddenly the function
@@ -80,6 +72,7 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " three-piece comment.
     let l:matches = matchlist(getline(l:line), '^\(\s*\(\S\+\)\)\(\s*\)')
     let l:prefix = get(l:matches, 1, '')
+    let l:prefixWidth = ingo#compat#strdisplaywidth(l:prefix)
     let l:prefixChars = get(l:matches, 2, '')
     let l:indent = get(l:matches, 3, '')
 
@@ -109,14 +102,18 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:isSpaceIndent = (l:indent =~# '^ ')
     let l:virtCol = virtcol('.')
 
+    " Need to evaluate g:IndentCommentPrefix_IndentSettingsOverride now, before
+    " removing the prefix, so that a configured Funcref sees the original line.
+    let l:overriddenIndentSettings = ingo#actions#ValueOrFunc(ingo#plugin#setting#GetBufferLocal('IndentCommentPrefix_IndentSettingsOverride'))
+
     " If the actual indent is a <Tab>, remove the prefix. If it is <Space>,
     " replace prefix with spaces so that the overall indentation remains fixed.
     " Note: We have to decide based on the actual indent, because with the
     " softtabstop setting, there may be spaces though the overall indenting is
     " done with <Tab>.
-    call s:SubstituteHere('/^\V\C' . escape(l:prefix, '/\') . '/' . (l:isSpaceIndent ? repeat(' ', len(l:prefix)) : '') . '/')
+    call s:SubstituteHere('^\V\C' . escape(l:prefix, '\'), (l:isSpaceIndent ? repeat(' ', l:prefixWidth) : ''))
 
-    let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count)
+    let l:actualShiftwidth = s:DoIndentWithOverride(a:isDedent, 0, a:count, l:overriddenIndentSettings)
 
     " If the first indent is a <Tab>, re-insert the prefix. If it is <Space>,
     " replace spaces with prefix so that the overall indentation remains fixed.
@@ -125,12 +122,12 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     let l:newIndent = matchstr(getline(l:line), '^\s')
     " Dedenting may have eaten up all indent spaces. In that case, just
     " re-insert the comment prefix as is done with <Tab> indenting.
-    call s:SubstituteHere('/^' . (l:newIndent == ' ' ? '\%( \{' . len(l:prefix) . '}\)\?' : '') . '/' . escape(l:prefix, '/\&~') . '/')
+    call s:SubstituteHere('^' . (l:newIndent == ' ' ? ' \{0,' . l:prefixWidth . '}' : ''), escape(l:prefix, '\&'))
 
     " If a blank is required after the comment prefix, make sure it still exists
     " when dedenting.
     if l:isBlankRequiredAfterPrefix && a:isDedent
-	call s:SubstituteHere('/^' . escape(l:prefix, '/\') . '\ze\S/\0 /e')
+	call s:SubstituteHere('^\V\C' . escape(l:prefix, '\') . '\ze\S', '\0 ')
     endif
 
 
@@ -139,20 +136,20 @@ function! s:IndentCommentPrefix( isDedent, isInsertMode, count )
     " Note: This calculation ignores a:count, see note in function
     " documentation.
     let l:newVirtCol = l:virtCol
-    if ! a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) < l:actualShiftwidth
+    if ! a:isDedent && l:isSpaceIndent && l:prefixWidth + len(l:indent) < l:actualShiftwidth
 	" If the former indent was less than one shiftwidth and indenting was
 	" done via spaces, this reduces the net change of cursor position.
-	let l:newVirtCol -= len(l:prefix . l:indent)
-    elseif a:isDedent && l:isSpaceIndent && len(l:prefix . l:indent) <= l:actualShiftwidth
+	let l:newVirtCol -= l:prefixWidth + len(l:indent)
+    elseif a:isDedent && l:isSpaceIndent && l:prefixWidth + len(l:indent) <= l:actualShiftwidth
 	" Also, on the last possible dedent, the prefix (and one <Space> if blank
 	" required) will reduce the net change of cursor position.
-	let l:newVirtCol += len(l:prefix) + (l:isBlankRequiredAfterPrefix ? 1 : 0)
+	let l:newVirtCol += l:prefixWidth + (l:isBlankRequiredAfterPrefix ? 1 : 0)
     endif
     " Calculate new cursor position based on indent/dedent of shiftwidth,
     " considering the adjustments made before.
     let l:newVirtCol += (a:isDedent ? -1 : 1) * l:actualShiftwidth
 
-"****D echomsg '****' l:virtCol l:newVirtCol len(l:prefix . l:indent)
+"****D echomsg '****' l:virtCol l:newVirtCol l:prefixWidth + len(l:indent)
     return l:newVirtCol
 
     " Note: The cursor column isn't updated here anymore, because the window
@@ -267,8 +264,7 @@ function! IndentCommentPrefix#Range( isDedent, count, lineNum ) range
     " Set the change marks similar to what Vim does. (I don't grasp the logic
     " for '[, but using the first non-blank character seems reasonable to me.)
     " This must somehow be done after the call to repeat.vim.
-    call setpos("'[", l:startChangePosition)
-    call setpos("']", [0, l:netLastLine, strlen(getline(l:netLastLine)), 0])
+    call ingo#change#Set(l:startChangePosition, ingo#pos#Make4(l:netLastLine, strlen(getline(l:netLastLine))))
 
     let l:lineNum = l:netLastLine - a:firstline + 1
     if l:lineNum > &report
